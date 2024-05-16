@@ -4,15 +4,17 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Proveedores;
 
-class Proveedorescontroller extends Controller
+class ProveedoresController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+        $proveedores = Proveedores::all();
+        return response()->json(['proveedores' => $proveedores], 200);
     }
 
     /**
@@ -20,7 +22,12 @@ class Proveedorescontroller extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $proveedor = new Proveedores();
+        $proveedor->nombre = $request->nombre;
+        $proveedor->contacto = $request->contacto;
+        $proveedor->save();
+
+        return response()->json(['message' => 'Proveedor creado correctamente', 'proveedor' => $proveedor], 201);
     }
 
     /**
@@ -28,7 +35,13 @@ class Proveedorescontroller extends Controller
      */
     public function show(string $id)
     {
-        //
+        $proveedor = Proveedores::find($id);
+
+        if ($proveedor) {
+            return response()->json(['proveedor' => $proveedor], 200);
+        } else {
+            return response()->json(['message' => 'Proveedor no encontrado'], 404);
+        }
     }
 
     /**
@@ -36,7 +49,17 @@ class Proveedorescontroller extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $proveedor = Proveedores::find($id);
+
+        if ($proveedor) {
+            $proveedor->nombre = $request->nombre;
+            $proveedor->contacto = $request->contacto;
+            $proveedor->save();
+
+            return response()->json(['message' => 'Proveedor actualizado correctamente', 'proveedor' => $proveedor], 200);
+        } else {
+            return response()->json(['message' => 'Proveedor no encontrado'], 404);
+        }
     }
 
     /**
@@ -44,6 +67,13 @@ class Proveedorescontroller extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $proveedor = Proveedores::find($id);
+
+        if ($proveedor) {
+            $proveedor->delete();
+            return response()->json(['message' => 'Proveedor eliminado correctamente'], 200);
+        } else {
+            return response()->json(['message' => 'Proveedor no encontrado'], 404);
+        }
     }
 }

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\ProductosController;
 use App\Http\Controllers\api\CategoriasController;
 use App\Http\Controllers\api\ClientesController;
+use App\Http\Controllers\api\ProveedoresController;
+
 
 
 Route::get('/user', function (Request $request) {
@@ -21,6 +23,7 @@ Route::get('/categorias',[CategoriasController::class, 'index']) ->name('categor
 Route::get('/clientes',[ClientesController::class, 'index']) ->name('clientes');
 
 //Proveedores rutas
+Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('proveedores');
 
 //Ventas rutas
 
