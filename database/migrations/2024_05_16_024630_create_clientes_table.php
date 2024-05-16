@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('clientes', function (Blueprint $table) {
-            $table->id();
+            $table->id();  // Esto crea un campo `id` de tipo `bigint unsigned`
             $table->string('nombre');
             $table->string('apellido');
             $table->string('email')->unique();

@@ -9,11 +9,9 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $table = 'productos';
-    protected $primaryKey = 'id';
-     public $timestamps = false;
+    protected $table = 'productos'; 
 
-    protected $fillable = [
+    protected $fillable = [ 
         'nombre',
         'descripcion',
         'precio',
@@ -21,13 +19,10 @@ class Producto extends Model
         'stock',
     ];
 
+    /**
+     */
     public function categoria()
     {
-        return $this->belongsTo(Categoria::class);
-    }
-
-    public function ventas()
-    {
-        return $this->hasMany(Venta::class);
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 }
