@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Venta;
 use Illuminate\Http\Request;
 
 class VentasController extends Controller
@@ -12,7 +13,8 @@ class VentasController extends Controller
      */
     public function index()
     {
-        //
+        $ventas = Venta::all();
+        return response()->json(['ventas' => $ventas], 200);
     }
 
     /**
@@ -20,7 +22,21 @@ class VentasController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'producto_id' => 'required|exists:productos,id',
+            'cantidad' => 'required|integer',
+            'fecha_venta' => 'required|date',
+            'total' => 'required|numeric',
+        ]);
+
+        $venta = Venta::create([
+            'producto_id' => $request->producto_id,
+            'cantidad' => $request->cantidad,
+            'fecha_venta' => $request->fecha_venta,
+            'total' => $request->total,
+        ]);
+
+        return response()->json(['venta' => $venta], 201);
     }
 
     /**
@@ -28,7 +44,13 @@ class VentasController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $venta = Venta::find($id);
+
+        if (!$venta) {
+            return response()->json(['message' => 'Venta not found'], 404);
+        }
+
+        return response()->json(['venta' => $venta], 200);
     }
 
     /**
@@ -36,7 +58,27 @@ class VentasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'producto_id' => 'required|exists:productos,id',
+            'cantidad' => 'required|integer',
+            'fecha_venta' => 'required|date',
+            'total' => 'required|numeric',
+        ]);
+
+        $venta = Venta::find($id);
+
+        if (!$venta) {
+            return response()->json(['message' => 'Venta not found'], 404);
+        }
+
+        $venta->update([
+            'producto_id' => $request->producto_id,
+            'cantidad' => $request->cantidad,
+            'fecha_venta' => $request->fecha_venta,
+            'total' => $request->total,
+        ]);
+
+        return response()->json(['venta' => $venta], 200);
     }
 
     /**
@@ -44,6 +86,14 @@ class VentasController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $venta = Venta::find($id);
+
+        if (!$venta) {
+            return response()->json(['message' => 'Venta not found'], 404);
+        }
+
+        $venta->delete();
+
+        return response()->json(['message' => 'Venta deleted successfully'], 200);
     }
 }

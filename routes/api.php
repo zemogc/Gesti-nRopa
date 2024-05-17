@@ -27,5 +27,6 @@ Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('prove
 
 //Ventas rutas
 
+Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('proveedores');
 
 
