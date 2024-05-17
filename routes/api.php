@@ -6,7 +6,7 @@ use App\Http\Controllers\api\ProductosController;
 use App\Http\Controllers\api\CategoriasController;
 use App\Http\Controllers\api\ClientesController;
 use App\Http\Controllers\api\ProveedoresController;
-
+use App\Http\Controllers\api\VentasController;
 
 
 Route::get('/user', function (Request $request) {
@@ -27,6 +27,6 @@ Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('prove
 
 //Ventas rutas
 
-Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('proveedores');
+Route::get('/ventas',[VentasController::class, 'index']) ->name('ventas');
 
 
