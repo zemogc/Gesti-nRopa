@@ -5,8 +5,10 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
-class CategoriasController extends Controller
+class CategoriaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +16,8 @@ class CategoriasController extends Controller
     public function index()
     {
         $categorias = Categoria::all();
-        return response()->json(['categorias' => $categorias]);
+        return json_encode(['categorias' => $categorias]);
+
     }
 
     /**
@@ -22,17 +25,17 @@ class CategoriasController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
+        $validate = Validator::make($request->all(), [
+            'name' => ['required', 'max:30']
         ]);
-
         $categoria = new Categoria();
+        $categoria->id = $request->id;
         $categoria->nombre = $request->nombre;
         $categoria->descripcion = $request->descripcion;
         $categoria->save();
 
-        return response()->json(['categoria' => $categoria, 'message' => 'Categoría creada correctamente.']);
+        return json_encode(['categoria' => $categoria]);
+
     }
 
     /**
@@ -41,12 +44,12 @@ class CategoriasController extends Controller
     public function show(string $id)
     {
         $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
+        if (is_null($categoria)) {
+            return abort(404);
         }
 
-        return response()->json(['categoria' => $categoria]);
+        return json_encode(['categoria' => $categoria]);
+
     }
 
     /**
@@ -54,22 +57,14 @@ class CategoriasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'nullable|string',
-        ]);
-
         $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
-        }
-
+        $categoria->id = $request->id;
         $categoria->nombre = $request->nombre;
         $categoria->descripcion = $request->descripcion;
         $categoria->save();
 
-        return response()->json(['categoria' => $categoria, 'message' => 'Categoría actualizada correctamente.']);
+        return json_encode(['categoria' => $categoria]);
+
     }
 
     /**
@@ -78,13 +73,10 @@ class CategoriasController extends Controller
     public function destroy(string $id)
     {
         $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
-        }
-
         $categoria->delete();
 
-        return response()->json(['message' => 'Categoría eliminada correctamente.']);
+        $categorias = Categoria::all();
+        return json_encode(['categorias' => $categorias, 'success' => true]);
+
     }
 }

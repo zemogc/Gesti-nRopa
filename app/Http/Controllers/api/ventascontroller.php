@@ -5,6 +5,8 @@ namespace App\Http\Controllers\api;
 use App\Http\Controllers\Controller;
 use App\Models\Venta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class VentasController extends Controller
 {
@@ -13,8 +15,14 @@ class VentasController extends Controller
      */
     public function index()
     {
-        $ventas = Venta::all();
-        return response()->json(['ventas' => $ventas], 200);
+        $ventas = DB::table('ventas')
+            ->join('productos', 'ventas.producto_id', '=', 'productos.id')
+            ->join('clientes', 'ventas.cliente_id', '=', 'clientes.id')
+            ->select('ventas.*', 'productos.nombre as producto_nombre', 'clientes.nombre as cliente_nombre', 'clientes.apellido as cliente_apellido')
+            ->get();
+
+        return json_encode(['ventas' => $ventas]);
+
     }
 
     /**
@@ -22,21 +30,21 @@ class VentasController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'producto_id' => 'required|exists:productos,id',
-            'cantidad' => 'required|integer',
-            'fecha_venta' => 'required|date',
-            'total' => 'required|numeric',
+        $validate = Validator::make($request->all(), [
+            'name' => ['required', 'max:30']
         ]);
+        $venta = new Venta();
+        $venta->id = $request->id;
+        $venta->producto_id = $request->producto_id;
+        $venta->cliente_id = $request->cliente_id;
+        $venta->cantidad = $request->cantidad;
+        $venta->fecha_venta = $request->fecha_venta;
+        $venta->total = $request->total;
+        $venta->save();
 
-        $venta = Venta::create([
-            'producto_id' => $request->producto_id,
-            'cantidad' => $request->cantidad,
-            'fecha_venta' => $request->fecha_venta,
-            'total' => $request->total,
-        ]);
+        return json_encode(['venta' => $venta]);
 
-        return response()->json(['venta' => $venta], 201);
+
     }
 
     /**
@@ -45,12 +53,14 @@ class VentasController extends Controller
     public function show(string $id)
     {
         $venta = Venta::find($id);
-
-        if (!$venta) {
-            return response()->json(['message' => 'Venta not found'], 404);
+        if (is_null($venta)) {
+            return abort(404);
         }
+        $productos = DB::table('productos')->orderBy('nombre')->get();
+        $clientes = DB::table('clientes')->orderBy('nombre', 'apellido')->get();
 
-        return response()->json(['venta' => $venta], 200);
+        return json_encode(['venta' => $venta, 'productos' => $productos, 'clientes' => $clientes]);
+
     }
 
     /**
@@ -58,27 +68,17 @@ class VentasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'producto_id' => 'required|exists:productos,id',
-            'cantidad' => 'required|integer',
-            'fecha_venta' => 'required|date',
-            'total' => 'required|numeric',
-        ]);
-
         $venta = Venta::find($id);
+        $venta->id = $request->id;
+        $venta->producto_id = $request->producto_id;
+        $venta->cliente_id = $request->cliente_id;
+        $venta->cantidad = $request->cantidad;
+        $venta->fecha_venta = $request->fecha_venta;
+        $venta->total = $request->total;
+        $venta->save();
 
-        if (!$venta) {
-            return response()->json(['message' => 'Venta not found'], 404);
-        }
+        return json_encode(['venta' => $venta]);
 
-        $venta->update([
-            'producto_id' => $request->producto_id,
-            'cantidad' => $request->cantidad,
-            'fecha_venta' => $request->fecha_venta,
-            'total' => $request->total,
-        ]);
-
-        return response()->json(['venta' => $venta], 200);
     }
 
     /**
@@ -87,13 +87,14 @@ class VentasController extends Controller
     public function destroy(string $id)
     {
         $venta = Venta::find($id);
-
-        if (!$venta) {
-            return response()->json(['message' => 'Venta not found'], 404);
-        }
-
         $venta->delete();
 
-        return response()->json(['message' => 'Venta deleted successfully'], 200);
+        $ventas = DB::table('ventas')
+            ->join('productos', 'ventas.producto_id', '=', 'productos.id')
+            ->join('clientes', 'ventas.cliente_id', '=', 'clientes.id')
+            ->select('ventas.*', 'productos.nombre as producto_nombre', 'clientes.nombre as cliente_nombre', 'clientes.apellido as cliente_apellido')
+            ->get();
+
+        return json_encode(['ventas' => $ventas, 'success' => true]);
     }
 }

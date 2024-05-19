@@ -8,14 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Proveedores extends Model
 {
     use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'nombre',
-        'contacto',
-    ];
+    protected $table = 'proveedores';
+    protected $primaryKey = 'id';
+    public $timestamps = false;
 }

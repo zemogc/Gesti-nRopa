@@ -8,17 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Cliente extends Model
 {
     use HasFactory;
-
     protected $table = 'clientes';
-
-    protected $fillable = [
-        'nombre',
-        'apellido',
-        'email',
-        'telefono',
-    ];
-
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    protected $primaryKey = 'id';
+    public $timestamps = false;
 }

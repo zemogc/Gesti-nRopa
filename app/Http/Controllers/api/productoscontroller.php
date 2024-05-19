@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Producto;
 use Illuminate\Http\Request;
-use App\Models\Producto; 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ProductosController extends Controller
 {
@@ -13,8 +15,12 @@ class ProductosController extends Controller
      */
     public function index()
     {
-        $productos = Producto::all(); 
-        return response()->json(['productos' => $productos], 200); 
+        $productos = DB::table('productos')
+            ->join('categorias', 'categorias.id', '=', 'productos.categoria_id')
+            ->select('productos.*', 'categorias.nombre as categoria')
+            ->get();
+        return json_encode(['productos' => $productos]);
+
     }
 
     /**
@@ -22,19 +28,20 @@ class ProductosController extends Controller
      */
     public function store(Request $request)
     {
-    
-        $request->validate([
-            'nombre' => 'required',
-            'descripcion' => 'required',
-            'precio' => 'required|numeric',
-            'categoria_id' => 'required|exists:categorias,id',
-            'stock' => 'required|numeric'
+        $validate = Validator::make($request->all(), [
+            'name' => ['required', 'max:30']
         ]);
+        $producto = new Producto();
+        $producto->id = $request->id;
+        $producto->nombre = $request->nombre;
+        $producto->descripcion = $request->descripcion;
+        $producto->precio = $request->precio;
+        $producto->categoria_id = $request->categoria_id;
+        $producto->stock = $request->stock;
+        $producto->save();
 
-        
-        $producto = Producto::create($request->all());
+        return json_encode(['producto' => $producto]);
 
-        return response()->json(['producto' => $producto], 201); 
     }
 
     /**
@@ -42,8 +49,14 @@ class ProductosController extends Controller
      */
     public function show(string $id)
     {
-        $producto = Producto::findOrFail($id); 
-        return response()->json(['producto' => $producto], 200); 
+        $producto = Producto::find($id);
+        if (is_null($producto)) {
+            return abort(404);
+        }
+
+        $categorias = DB::table('categorias')->orderBy('nombre')->get();
+        return json_encode(['producto' => $producto, 'categorias' => $categorias]);
+
     }
 
     /**
@@ -51,20 +64,18 @@ class ProductosController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        
-        $request->validate([
-            'nombre' => 'required',
-            'descripcion' => 'required',
-            'precio' => 'required|numeric',
-            'categoria_id' => 'required|exists:categorias,id',
-            'stock' => 'required|numeric'
-        ]);
+        $producto = Producto::find($id);
+        $producto->id = $request->id;
+        $producto->nombre = $request->nombre;
+        $producto->descripcion = $request->descripcion;
+        $producto->precio = $request->precio;
+        $producto->categoria_id = $request->categoria_id;
+        $producto->stock = $request->stock;
+        $producto->save();
 
-    
-        $producto = Producto::findOrFail($id);
-        $producto->update($request->all());
+        return json_encode(['producto' => $producto]);
 
-        return response()->json(['producto' => $producto], 200); 
+
     }
 
     /**
@@ -72,10 +83,15 @@ class ProductosController extends Controller
      */
     public function destroy(string $id)
     {
-        
-        $producto = Producto::findOrFail($id);
+        $producto = Producto::find($id);
         $producto->delete();
 
-        return response()->json(['message' => 'Producto eliminado correctamente'], 200); 
+        $productos = DB::table('productos')
+            ->join('categorias', 'categorias.id', '=', 'productos.categoria_id')
+            ->select('productos.*', 'categorias.nombre as categoria')
+            ->get();
+
+        return json_encode(['productos' => $productos, 'success' => true]);
+
     }
 }

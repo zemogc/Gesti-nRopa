@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Proveedores;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 class ProveedoresController extends Controller
 {
     /**
@@ -14,7 +15,8 @@ class ProveedoresController extends Controller
     public function index()
     {
         $proveedores = Proveedores::all();
-        return response()->json(['proveedores' => $proveedores], 200);
+        return json_encode(['proveedores' => $proveedores]);
+
     }
 
     /**
@@ -22,12 +24,17 @@ class ProveedoresController extends Controller
      */
     public function store(Request $request)
     {
+        $validate = Validator::make($request->all(), [
+            'name' => ['required', 'max:30']
+        ]);
         $proveedor = new Proveedores();
+        $proveedor->id = $request->id;
         $proveedor->nombre = $request->nombre;
         $proveedor->contacto = $request->contacto;
         $proveedor->save();
 
-        return response()->json(['message' => 'Proveedor creado correctamente', 'proveedor' => $proveedor], 201);
+        return json_encode(['proveedor' => $proveedor]);
+
     }
 
     /**
@@ -36,12 +43,12 @@ class ProveedoresController extends Controller
     public function show(string $id)
     {
         $proveedor = Proveedores::find($id);
-
-        if ($proveedor) {
-            return response()->json(['proveedor' => $proveedor], 200);
-        } else {
-            return response()->json(['message' => 'Proveedor no encontrado'], 404);
+        if (is_null($proveedor)) {
+            return abort(404);
         }
+
+        return json_encode(['proveedor' => $proveedor]);
+
     }
 
     /**
@@ -51,15 +58,13 @@ class ProveedoresController extends Controller
     {
         $proveedor = Proveedores::find($id);
 
-        if ($proveedor) {
-            $proveedor->nombre = $request->nombre;
-            $proveedor->contacto = $request->contacto;
-            $proveedor->save();
+        $proveedor->id = $request->id;
+        $proveedor->nombre = $request->nombre;
+        $proveedor->contacto = $request->contacto;
+        $proveedor->save();
 
-            return response()->json(['message' => 'Proveedor actualizado correctamente', 'proveedor' => $proveedor], 200);
-        } else {
-            return response()->json(['message' => 'Proveedor no encontrado'], 404);
-        }
+        return json_encode(['proveedor' => $proveedor]);
+
     }
 
     /**
@@ -68,12 +73,10 @@ class ProveedoresController extends Controller
     public function destroy(string $id)
     {
         $proveedor = Proveedores::find($id);
+        $proveedor ->delete();
 
-        if ($proveedor) {
-            $proveedor->delete();
-            return response()->json(['message' => 'Proveedor eliminado correctamente'], 200);
-        } else {
-            return response()->json(['message' => 'Proveedor no encontrado'], 404);
-        }
+        $proveedores = Proveedores::all();
+        return json_encode(['proveedores' => $proveedores, 'success' => true]);
+
     }
 }
