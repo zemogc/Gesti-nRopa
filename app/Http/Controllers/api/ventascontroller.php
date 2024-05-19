@@ -4,6 +4,8 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Venta;
+use App\Models\Producto;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -31,7 +33,7 @@ class VentasController extends Controller
     public function store(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
+            'id' => ['required', 'max:30']
         ]);
         $venta = new Venta();
         $venta->id = $request->id;
@@ -56,8 +58,8 @@ class VentasController extends Controller
         if (is_null($venta)) {
             return abort(404);
         }
-        $productos = DB::table('productos')->orderBy('nombre')->get();
-        $clientes = DB::table('clientes')->orderBy('nombre', 'apellido')->get();
+        $productos = Producto::all();
+        $clientes = Cliente::all();
 
         return json_encode(['venta' => $venta, 'productos' => $productos, 'clientes' => $clientes]);
 
