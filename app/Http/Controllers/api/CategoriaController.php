@@ -3,80 +3,51 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoriaRequest;
 use App\Models\Categoria;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class CategoriaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        $categorias = Categoria::all();
-        return json_encode(['categorias' => $categorias]);
-
+        return $this->listar($request, Categoria::orderBy('nombre'), 'categorias');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(CategoriaRequest $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
-        ]);
-        $categoria = new Categoria();
-        $categoria->id = $request->id;
-        $categoria->nombre = $request->nombre;
-        $categoria->descripcion = $request->descripcion;
-        $categoria->save();
+        $categoria = Categoria::create($request->validated());
 
-        return json_encode(['categoria' => $categoria]);
-
+        return response()->json(['categoria' => $categoria], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Categoria $categoria): JsonResponse
     {
-        $categoria = Categoria::find($id);
-        if (is_null($categoria)) {
-            return abort(404);
+        return response()->json(['categoria' => $categoria]);
+    }
+
+    public function update(CategoriaRequest $request, Categoria $categoria): JsonResponse
+    {
+        $categoria->update($request->validated());
+
+        return response()->json(['categoria' => $categoria]);
+    }
+
+    public function destroy(Categoria $categoria): JsonResponse
+    {
+        // La llave foranea borra en cascada: se impide para no perder productos ni ventas
+        if ($categoria->productos()->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar la categoria porque tiene productos asociados.',
+            ], 409);
         }
 
-        return json_encode(['categoria' => $categoria]);
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $categoria = Categoria::find($id);
-        $categoria->id = $request->id;
-        $categoria->nombre = $request->nombre;
-        $categoria->descripcion = $request->descripcion;
-        $categoria->save();
-
-        return json_encode(['categoria' => $categoria]);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $categoria = Categoria::find($id);
         $categoria->delete();
 
-        $categorias = Categoria::all();
-        return json_encode(['categorias' => $categorias, 'success' => true]);
-
+        return response()->json([
+            'success' => true,
+            'categorias' => Categoria::orderBy('nombre')->get(),
+        ]);
     }
 }

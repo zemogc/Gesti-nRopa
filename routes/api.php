@@ -1,48 +1,50 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\api\ProductosController;
+use App\Http\Controllers\api\AuthController;
 use App\Http\Controllers\api\CategoriaController;
 use App\Http\Controllers\api\ClientesController;
+use App\Http\Controllers\api\ProductosController;
 use App\Http\Controllers\api\ProveedoresController;
+use App\Http\Controllers\api\ReporteVentasController;
+use App\Http\Controllers\api\ResumenController;
 use App\Http\Controllers\api\VentasController;
+use App\Http\Middleware\AutenticacionOpcional;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
+Route::post('/auth/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1')
+    ->name('auth.login');
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-//ruta categorias
-Route::get('/categorias',[CategoriaController::class, 'index']) ->name('categorias');
-Route::post('/categorias', [CategoriaController::class, 'store'])->name('categorias.store'); 
-Route::delete('/categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
-Route::put('/categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
-Route::get('/categorias/{categoria}', [CategoriaController::class , 'show'])->name('categorias.show');
-//ruta clientes
-Route::get('/clientes',[ClientesController::class, 'index']) ->name('clientes');
-Route::post('/clientes', [ClientesController::class, 'store'])->name('clientes.store'); 
-Route::delete('/clientes/{cliente}', [ClientesController::class, 'destroy'])->name('clientes.destroy');
-Route::put('/clientes/{cliente}', [ClientesController::class, 'update'])->name('clientes.update');
-Route::get('/clientes/{cliente}', [ClientesController::class , 'show'])->name('clientes.show');
-//ruta Productos
-Route::get('/productos',[ProductosController::class, 'index']) ->name('productos');
-Route::post('/productos', [ProductosController::class, 'store'])->name('productos.store'); 
-Route::delete('/productos/{producto}', [ProductosController::class, 'destroy'])->name('productos.destroy');
-Route::put('/productos/{producto}', [ProductosController::class, 'update'])->name('productos.update');
-Route::get('/productos/{producto}', [ProductosController::class , 'show'])->name('productos.show');
-//Proveedores rutas
-Route::get('/proveedores',[ProveedoresController::class, 'index']) ->name('proveedores');
-Route::post('/proveedores', [ProveedoresController::class, 'store'])->name('proveedores.store'); 
-Route::delete('/proveedores/{proveedor}', [ProveedoresController::class, 'destroy'])->name('proveedores.destroy');
-Route::put('/proveedores/{proveedor}', [ProveedoresController::class, 'update'])->name('proveedores.update');
-Route::get('/proveedores/{proveedor}', [ProveedoresController::class , 'show'])->name('proveedores.show');
-//Ventas rutas
-Route::get('/ventas',[VentasController::class, 'index']) ->name('ventas');
-Route::post('/ventas', [VentasController::class, 'store'])->name('ventas.store'); 
-Route::delete('/ventas/{venta}', [VentasController::class, 'destroy'])->name('ventas.destroy');
-Route::put('/ventas/{venta}', [VentasController::class, 'update'])->name('ventas.update');
-Route::get('/ventas/{venta}', [VentasController::class , 'show'])->name('ventas.show');
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+});
 
+// Exigen token solo si API_REQUIERE_AUTH=true (ver config/gestion.php)
+Route::middleware(AutenticacionOpcional::class)->group(function () {
+    Route::get('/resumen', ResumenController::class)->name('resumen');
+    Route::get('/resumen/ventas', ReporteVentasController::class)->name('resumen.ventas');
 
+    Route::apiResource('categorias', CategoriaController::class)
+        ->parameters(['categorias' => 'categoria']);
 
+    Route::apiResource('clientes', ClientesController::class)
+        ->parameters(['clientes' => 'cliente']);
+
+    Route::apiResource('productos', ProductosController::class)
+        ->parameters(['productos' => 'producto']);
+    Route::post('/productos/{producto}/reabastecer', [ProductosController::class, 'reabastecer'])
+        ->name('productos.reabastecer');
+
+    Route::apiResource('proveedores', ProveedoresController::class)
+        ->parameters(['proveedores' => 'proveedor']);
+
+    // Antes del apiResource para que "exportar" no se interprete como el id de una venta
+    Route::get('/ventas/exportar', [VentasController::class, 'exportar'])->name('ventas.exportar');
+    Route::apiResource('ventas', VentasController::class)
+        ->parameters(['ventas' => 'venta']);
+});

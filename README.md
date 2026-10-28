@@ -1,66 +1,211 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Gestión de Ropa — API REST
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST construida con **Laravel 12** para administrar el inventario y las ventas de una tienda de ropa: categorías, productos, clientes, proveedores y ventas.
 
-## About Laravel
+## Características
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- CRUD completo para categorías, productos, clientes, proveedores y ventas.
+- Validación de datos con Form Requests y **mensajes en español** (errores `422` en JSON).
+- Respuestas `404` en JSON cuando un recurso no existe.
+- **Control de stock en ventas**: al registrar una venta se descuenta el stock del producto; al editarla o anularla se devuelve. Todo ocurre dentro de una transacción y se rechaza la venta si no hay unidades suficientes.
+- El **total de la venta se calcula en el servidor** a partir del precio del producto.
+- **Protección del historial**: no se pueden eliminar clientes o productos con ventas, ni categorías con productos (`409`).
+- Productos con **talla, color y SKU**, asociados a un **proveedor**, y endpoint de **reabastecimiento** de stock.
+- **Reporte de ventas por día o mes** y **exportación a CSV** para Excel.
+- Filtros de búsqueda y **paginación opcional** en los listados.
+- Endpoint de **resumen** con indicadores del negocio.
+- **Autenticación opcional** con tokens (Laravel Sanctum) y límite de peticiones por minuto.
+- Entorno **Docker** con MySQL listo para usar.
+- Seeder con un catálogo de ropa de ejemplo.
+- Tests de integración para todos los endpoints.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Inicio rápido con Docker
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Solo necesitas Docker:
 
-## Learning Laravel
+```bash
+git clone https://github.com/zemogc/Gesti-nRopa.git
+cd Gesti-nRopa
+docker compose up -d --build
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+La API queda en `http://localhost:8000/api` con MySQL y datos de ejemplo cargados. MySQL se expone en el puerto `3307` (usuario `gestion`, contraseña `gestion`).
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Comandos útiles:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+docker compose exec app composer test               # tests
+docker compose exec app php artisan migrate:fresh --seed  # reiniciar datos
+docker compose down                                 # detener
+```
 
-## Laravel Sponsors
+## Instalación sin Docker
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Requisitos: PHP 8.2 o superior (extensiones `pdo_sqlite` o `pdo_mysql`) y Composer 2.
 
-### Premium Partners
+```bash
+git clone https://github.com/zemogc/Gesti-nRopa.git
+cd Gesti-nRopa
+composer install
+cp .env.example .env
+php artisan key:generate
+touch database/database.sqlite
+php artisan migrate --seed
+php artisan serve
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+Por defecto se usa SQLite. Para usar MySQL, ajusta en `.env` las variables `DB_CONNECTION=mysql`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`.
 
-## Contributing
+## Configuración
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Variable | Por defecto | Descripción |
+| --- | --- | --- |
+| `API_REQUIERE_AUTH` | `false` | Si es `true`, todos los endpoints exigen un token Bearer. |
+| `API_LIMITE_POR_MINUTO` | `120` | Peticiones por minuto por usuario o IP; al superarlo se responde `429`. |
 
-## Code of Conduct
+## Autenticación
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Crea un usuario y obtén un token:
 
-## Security Vulnerabilities
+```bash
+php artisan usuario:crear "Admin" admin@tienda.com
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@tienda.com", "password": "tu-contrasena"}'
+```
 
-## License
+```json
+{ "token": "1|abc...", "tipo": "Bearer", "usuario": { "id": 1, "name": "Admin" } }
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Envía el token en cada petición con `Authorization: Bearer <token>`. Para revocarlo: `POST /api/auth/logout`. El login admite 5 intentos por minuto.
+
+El seeder crea el usuario `test@example.com` con contraseña `password`.
+
+## Endpoints
+
+Todas las rutas tienen el prefijo `/api`. Cada recurso expone las operaciones REST estándar:
+
+| Método | Ruta | Acción |
+| --- | --- | --- |
+| `GET` | `/{recurso}` | Listar |
+| `POST` | `/{recurso}` | Crear (`201`) |
+| `GET` | `/{recurso}/{id}` | Ver detalle |
+| `PUT` / `PATCH` | `/{recurso}/{id}` | Actualizar |
+| `DELETE` | `/{recurso}/{id}` | Eliminar (`409` si tiene registros asociados) |
+
+Recursos: `categorias`, `productos`, `clientes`, `proveedores`, `ventas`.
+
+Además:
+
+| Método | Ruta | Acción |
+| --- | --- | --- |
+| `POST` | `/productos/{id}/reabastecer` | Suma `cantidad` al stock; opcionalmente registra `proveedor_id` |
+| `GET` | `/resumen` | Indicadores: totales, ingresos, stock bajo y más vendidos |
+| `GET` | `/resumen/ventas` | Ventas, unidades e ingresos agrupados por día o mes |
+| `GET` | `/ventas/exportar` | Descarga las ventas en CSV (acepta los filtros del listado) |
+| `POST` | `/auth/login` | Obtener token |
+| `POST` | `/auth/logout` | Revocar token |
+| `GET` | `/user` | Usuario autenticado |
+
+En [docs/api.http](docs/api.http) hay peticiones de ejemplo listas para la extensión REST Client de VS Code.
+
+### Campos y validaciones
+
+| Recurso | Campos |
+| --- | --- |
+| Categorías | `nombre` (único, máx. 50), `descripcion` |
+| Productos | `nombre`, `descripcion`, `precio` (≥ 0), `categoria_id` (debe existir), `stock` (entero ≥ 0); opcionales: `sku` (único; letras, números, `-` y `_`), `talla`, `color`, `proveedor_id` |
+| Clientes | `nombre`, `apellido`, `email` (único), `telefono` (dígitos, espacios, `+`, `-`, `()`) |
+| Proveedores | `nombre`, `contacto` |
+| Ventas | `producto_id`, `cliente_id`, `cantidad` (≥ 1), `fecha_venta` (opcional, no futura; por defecto hoy) |
+
+En ventas el campo `total` **no se envía**: lo calcula la API.
+
+### Filtros y paginación
+
+| Ruta | Parámetros |
+| --- | --- |
+| `GET /productos` | `buscar` (nombre o SKU), `categoria_id`, `proveedor_id`, `talla`, `color`, `stock_bajo` (ej. `stock_bajo=5`) |
+| `GET /clientes` | `buscar` (nombre, apellido o email) |
+| `GET /ventas` y `/ventas/exportar` | `cliente_id`, `producto_id`, `desde`, `hasta` (`YYYY-MM-DD`) |
+| `GET /resumen` | `stock_minimo` (por defecto `5`) |
+| `GET /resumen/ventas` | `agrupar` (`dia` o `mes`), `desde`, `hasta`; por defecto últimos 30 días o 12 meses |
+
+Todos los listados aceptan `por_pagina` (máx. 100) y `pagina`. Sin `por_pagina` se devuelve la lista completa. Con paginación se agrega:
+
+```json
+"paginacion": { "pagina_actual": 1, "por_pagina": 10, "total": 42, "ultima_pagina": 5 }
+```
+
+### Ejemplos
+
+Registrar una venta:
+
+```bash
+curl -X POST http://localhost:8000/api/ventas \
+  -H "Content-Type: application/json" \
+  -d '{"producto_id": 1, "cliente_id": 1, "cantidad": 2}'
+```
+
+```json
+{
+  "venta": {
+    "id": 21,
+    "producto_id": 1,
+    "cliente_id": 1,
+    "cantidad": 2,
+    "fecha_venta": "2026-10-28",
+    "total": "70000.00",
+    "producto_nombre": "Camiseta basica algodon",
+    "cliente_nombre": "Ana",
+    "cliente_apellido": "Gomez"
+  }
+}
+```
+
+Si no hay stock suficiente:
+
+```json
+{
+  "message": "Stock insuficiente para Camiseta basica algodon. Disponible: 1.",
+  "errors": { "cantidad": ["Stock insuficiente para Camiseta basica algodon. Disponible: 1."] }
+}
+```
+
+## Estructura
+
+```
+app/
+├── Http/
+│   ├── Controllers/api/   # Controladores REST, resumen y autenticación
+│   ├── Middleware/        # Autenticación opcional
+│   ├── Requests/          # Reglas de validación por recurso
+│   └── Resources/         # Formato JSON de productos y ventas
+├── Models/                # Categoria, Producto, Cliente, Proveedor, Venta
+└── Services/
+    └── VentaService.php   # Lógica de ventas y stock
+config/gestion.php         # Opciones propias de la API
+database/
+├── factories/
+├── migrations/
+└── seeders/
+docker/                    # Script de arranque del contenedor
+docs/api.http              # Peticiones de ejemplo
+lang/es/                   # Mensajes de validación en español
+tests/Feature/             # Tests de integración de la API
+```
+
+## Tests y estilo
+
+```bash
+composer test   # PHPUnit (siempre usa SQLite en memoria, también dentro de Docker)
+composer lint   # Laravel Pint
+```
+
+## Licencia
+
+MIT
