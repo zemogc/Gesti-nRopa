@@ -86,6 +86,39 @@ class VentaApiTest extends TestCase
         $this->assertSame(1, $producto->fresh()->stock);
     }
 
+    public function test_actualizar_conserva_el_precio_original_aunque_el_producto_cambie_de_precio(): void
+    {
+        $producto = Producto::factory()->create(['precio' => 100, 'stock' => 10]);
+        $id = $this->registrarVenta($producto, 2)->json('venta.id');
+
+        $producto->update(['precio' => 150]);
+
+        $this->putJson("/api/ventas/{$id}", [
+            'producto_id' => $producto->id,
+            'cliente_id' => Venta::find($id)->cliente_id,
+            'cantidad' => 3,
+        ])
+            ->assertOk()
+            ->assertJsonPath('venta.precio_unitario', '100.00')
+            ->assertJsonPath('venta.total', '300.00');
+    }
+
+    public function test_actualizar_a_otro_producto_usa_el_precio_del_nuevo(): void
+    {
+        $anterior = Producto::factory()->create(['precio' => 100, 'stock' => 10]);
+        $nuevo = Producto::factory()->create(['precio' => 40, 'stock' => 10]);
+        $id = $this->registrarVenta($anterior, 2)->json('venta.id');
+
+        $this->putJson("/api/ventas/{$id}", [
+            'producto_id' => $nuevo->id,
+            'cliente_id' => Venta::find($id)->cliente_id,
+            'cantidad' => 2,
+        ])
+            ->assertOk()
+            ->assertJsonPath('venta.precio_unitario', '40.00')
+            ->assertJsonPath('venta.total', '80.00');
+    }
+
     public function test_actualizar_cambiando_de_producto_devuelve_el_stock_al_anterior(): void
     {
         $anterior = Producto::factory()->create(['stock' => 5]);

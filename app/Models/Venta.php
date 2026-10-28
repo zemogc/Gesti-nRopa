@@ -16,6 +16,7 @@ class Venta extends Model
         'producto_id',
         'cliente_id',
         'cantidad',
+        'precio_unitario',
         'fecha_venta',
         'total',
     ];
@@ -26,6 +27,7 @@ class Venta extends Model
             'producto_id' => 'integer',
             'cliente_id' => 'integer',
             'cantidad' => 'integer',
+            'precio_unitario' => 'decimal:2',
             'fecha_venta' => 'date:Y-m-d',
             'total' => 'decimal:2',
         ];
