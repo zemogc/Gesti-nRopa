@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Limitador 'api' definido en AppServiceProvider
+        $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // La API siempre responde JSON, aunque el cliente no envie "Accept: application/json"

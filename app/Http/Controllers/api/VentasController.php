@@ -33,10 +33,9 @@ class VentasController extends Controller
             ->when($request->query('cliente_id'), fn ($query, $cliente) => $query->where('cliente_id', $cliente))
             ->when($request->query('producto_id'), fn ($query, $producto) => $query->where('producto_id', $producto))
             ->when($request->query('desde'), fn ($query, $desde) => $query->whereDate('fecha_venta', '>=', $desde))
-            ->when($request->query('hasta'), fn ($query, $hasta) => $query->whereDate('fecha_venta', '<=', $hasta))
-            ->get();
+            ->when($request->query('hasta'), fn ($query, $hasta) => $query->whereDate('fecha_venta', '<=', $hasta));
 
-        return response()->json(['ventas' => VentaResource::collection($ventas)]);
+        return $this->listar($request, $ventas, 'ventas', VentaResource::class);
     }
 
     public function store(VentaRequest $request): JsonResponse

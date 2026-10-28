@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProveedorRequest;
 use App\Models\Proveedor;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ProveedoresController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(['proveedores' => Proveedor::orderBy('nombre')->get()]);
+        return $this->listar($request, Proveedor::orderBy('nombre'), 'proveedores');
     }
 
     public function store(ProveedorRequest $request): JsonResponse

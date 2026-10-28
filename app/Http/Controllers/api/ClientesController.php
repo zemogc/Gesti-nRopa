@@ -24,10 +24,9 @@ class ClientesController extends Controller
                 });
             })
             ->orderBy('apellido')
-            ->orderBy('nombre')
-            ->get();
+            ->orderBy('nombre');
 
-        return response()->json(['clientes' => $clientes]);
+        return $this->listar($request, $clientes, 'clientes');
     }
 
     public function store(ClienteRequest $request): JsonResponse

@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoriaRequest;
 use App\Models\Categoria;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(['categorias' => Categoria::orderBy('nombre')->get()]);
+        return $this->listar($request, Categoria::orderBy('nombre'), 'categorias');
     }
 
     public function store(CategoriaRequest $request): JsonResponse

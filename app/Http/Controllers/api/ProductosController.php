@@ -23,10 +23,9 @@ class ProductosController extends Controller
             ->when($request->query('buscar'), fn ($query, $buscar) => $query->where('nombre', 'like', "%{$buscar}%"))
             ->when($request->query('categoria_id'), fn ($query, $categoria) => $query->where('categoria_id', $categoria))
             ->when($request->query('proveedor_id'), fn ($query, $proveedor) => $query->where('proveedor_id', $proveedor))
-            ->when($request->filled('stock_bajo'), fn ($query) => $query->stockBajo($request->integer('stock_bajo')))
-            ->get();
+            ->when($request->filled('stock_bajo'), fn ($query) => $query->stockBajo($request->integer('stock_bajo')));
 
-        return response()->json(['productos' => ProductoResource::collection($productos)]);
+        return $this->listar($request, $productos, 'productos', ProductoResource::class);
     }
 
     public function store(ProductoRequest $request): JsonResponse

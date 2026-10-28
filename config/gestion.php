@@ -15,4 +15,16 @@ return [
 
     'requiere_autenticacion' => (bool) env('API_REQUIERE_AUTH', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Limite de peticiones
+    |--------------------------------------------------------------------------
+    |
+    | Numero maximo de peticiones por minuto a la API, por usuario autenticado
+    | o, si no hay sesion, por direccion IP. Al superarlo se responde 429.
+    |
+    */
+
+    'limite_por_minuto' => (int) env('API_LIMITE_POR_MINUTO', 120),
+
 ];
