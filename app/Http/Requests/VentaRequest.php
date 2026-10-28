@@ -2,19 +2,12 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class VentaRequest extends FormRequest
+class VentaRequest extends ApiRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * El total no se recibe: se calcula a partir del precio del producto.
      */
-    public function rules(): array
+    protected function reglas(): array
     {
         return [
             'producto_id' => ['required', 'integer', 'exists:productos,id'],
