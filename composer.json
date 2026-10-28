@@ -1,8 +1,8 @@
 {
-    "name": "laravel/laravel",
+    "name": "zemogc/gestion-ropa",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "API REST para la gestion de inventario y ventas de una tienda de ropa.",
+    "keywords": ["laravel", "api", "inventario", "ventas", "ropa"],
     "license": "MIT",
     "require": {
         "php": "^8.2",
