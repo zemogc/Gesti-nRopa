@@ -140,6 +140,50 @@ class ProductoApiTest extends TestCase
             ->assertJsonValidationErrors('cantidad');
     }
 
+    public function test_guarda_talla_color_y_sku(): void
+    {
+        $categoria = Categoria::factory()->create();
+        $datos = [
+            'sku' => 'JEAN-SLIM-32',
+            'nombre' => 'Jean slim',
+            'descripcion' => 'x',
+            'talla' => '32',
+            'color' => 'Azul',
+            'precio' => 10,
+            'categoria_id' => $categoria->id,
+            'stock' => 1,
+        ];
+
+        $id = $this->postJson('/api/productos', $datos)
+            ->assertCreated()
+            ->assertJsonPath('producto.sku', 'JEAN-SLIM-32')
+            ->assertJsonPath('producto.talla', '32')
+            ->assertJsonPath('producto.color', 'Azul')
+            ->json('producto.id');
+
+        // El SKU es unico, pero el propio producto puede conservarlo al actualizar
+        $this->postJson('/api/productos', $datos)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('sku');
+        $this->putJson("/api/productos/{$id}", $datos)->assertOk();
+
+        $this->postJson('/api/productos', ['sku' => 'con espacios'] + $datos)
+            ->assertJsonValidationErrors('sku');
+    }
+
+    public function test_filtra_por_talla_color_y_sku(): void
+    {
+        Producto::factory()->create(['sku' => 'CAM-M-NEG', 'talla' => 'M', 'color' => 'Negro']);
+        Producto::factory()->create(['sku' => 'CAM-L-NEG', 'talla' => 'L', 'color' => 'Negro']);
+        Producto::factory()->create(['sku' => 'CAM-M-BLA', 'talla' => 'M', 'color' => 'Blanco']);
+
+        $this->getJson('/api/productos?talla=M')->assertJsonCount(2, 'productos');
+        $this->getJson('/api/productos?talla=M&color=Negro')->assertJsonCount(1, 'productos');
+        $this->getJson('/api/productos?buscar=CAM-L-NEG')
+            ->assertJsonCount(1, 'productos')
+            ->assertJsonPath('productos.0.talla', 'L');
+    }
+
     public function test_no_elimina_un_producto_con_ventas(): void
     {
         $venta = Venta::factory()->create();

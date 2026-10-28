@@ -15,12 +15,16 @@ use Illuminate\Http\Request;
 class ProductosController extends Controller
 {
     /**
-     * Filtros opcionales: ?buscar=, ?categoria_id=, ?proveedor_id=, ?stock_bajo=5
+     * Filtros opcionales: ?buscar= (nombre o SKU), ?categoria_id=, ?proveedor_id=, ?talla=, ?color=, ?stock_bajo=5
      */
     public function index(Request $request): JsonResponse
     {
         $productos = $this->consulta()
-            ->when($request->query('buscar'), fn ($query, $buscar) => $query->where('nombre', 'like', "%{$buscar}%"))
+            ->when($request->query('buscar'), fn ($query, $buscar) => $query->where(
+                fn ($query) => $query->where('nombre', 'like', "%{$buscar}%")->orWhere('sku', $buscar)
+            ))
+            ->when($request->query('talla'), fn ($query, $talla) => $query->where('talla', $talla))
+            ->when($request->query('color'), fn ($query, $color) => $query->where('color', $color))
             ->when($request->query('categoria_id'), fn ($query, $categoria) => $query->where('categoria_id', $categoria))
             ->when($request->query('proveedor_id'), fn ($query, $proveedor) => $query->where('proveedor_id', $proveedor))
             ->when($request->filled('stock_bajo'), fn ($query) => $query->stockBajo($request->integer('stock_bajo')));
