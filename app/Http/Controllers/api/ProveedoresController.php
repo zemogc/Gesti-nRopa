@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Proveedores;
+use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -14,7 +14,7 @@ class ProveedoresController extends Controller
      */
     public function index()
     {
-        $proveedores = Proveedores::all();
+        $proveedores = Proveedor::all();
         return json_encode(['proveedores' => $proveedores]);
 
     }
@@ -27,7 +27,7 @@ class ProveedoresController extends Controller
         $validate = Validator::make($request->all(), [
             'name' => ['required', 'max:30']
         ]);
-        $proveedor = new Proveedores();
+        $proveedor = new Proveedor();
         $proveedor->id = $request->id;
         $proveedor->nombre = $request->nombre;
         $proveedor->contacto = $request->contacto;
@@ -42,7 +42,7 @@ class ProveedoresController extends Controller
      */
     public function show(string $id)
     {
-        $proveedor = Proveedores::find($id);
+        $proveedor = Proveedor::find($id);
         if (is_null($proveedor)) {
             return abort(404);
         }
@@ -56,7 +56,7 @@ class ProveedoresController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $proveedor = Proveedores::find($id);
+        $proveedor = Proveedor::find($id);
 
         $proveedor->id = $request->id;
         $proveedor->nombre = $request->nombre;
@@ -72,10 +72,10 @@ class ProveedoresController extends Controller
      */
     public function destroy(string $id)
     {
-        $proveedor = Proveedores::find($id);
+        $proveedor = Proveedor::find($id);
         $proveedor ->delete();
 
-        $proveedores = Proveedores::all();
+        $proveedores = Proveedor::all();
         return json_encode(['proveedores' => $proveedores, 'success' => true]);
 
     }
