@@ -19,6 +19,7 @@ class ProductoRequest extends FormRequest
             // decimal(8, 2) en la base de datos
             'precio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'categoria_id' => ['required', 'integer', 'exists:categorias,id'],
+            'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
             'stock' => ['required', 'integer', 'min:0'],
         ];
     }

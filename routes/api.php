@@ -23,6 +23,8 @@ Route::apiResource('clientes', ClientesController::class)
 
 Route::apiResource('productos', ProductosController::class)
     ->parameters(['productos' => 'producto']);
+Route::post('/productos/{producto}/reabastecer', [ProductosController::class, 'reabastecer'])
+    ->name('productos.reabastecer');
 
 Route::apiResource('proveedores', ProveedoresController::class)
     ->parameters(['proveedores' => 'proveedor']);

@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             'Accesorios' => ['Gorra' => 30000, 'Cinturon de cuero' => 55000],
         ];
 
+        $proveedores = Proveedor::factory(4)->create();
+
         foreach ($catalogo as $categoria => $productos) {
             $categoria = Categoria::create([
                 'nombre' => $categoria,
@@ -36,7 +38,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             foreach ($productos as $nombre => $precio) {
-                Producto::factory()->for($categoria)->create([
+                Producto::factory()->for($categoria)->for($proveedores->random())->create([
                     'nombre' => $nombre,
                     'precio' => $precio,
                     'stock' => fake()->numberBetween(3, 40),
@@ -44,7 +46,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        Proveedor::factory(4)->create();
         $clientes = Cliente::factory(10)->create();
 
         // Las ventas pasan por el servicio para que el stock quede consistente

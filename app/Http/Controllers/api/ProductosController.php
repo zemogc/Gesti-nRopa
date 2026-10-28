@@ -7,6 +7,7 @@ use App\Http\Requests\ProductoRequest;
 use App\Http\Resources\ProductoResource;
 use App\Models\Categoria;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,13 +15,14 @@ use Illuminate\Http\Request;
 class ProductosController extends Controller
 {
     /**
-     * Filtros opcionales: ?buscar=, ?categoria_id=, ?stock_bajo=5
+     * Filtros opcionales: ?buscar=, ?categoria_id=, ?proveedor_id=, ?stock_bajo=5
      */
     public function index(Request $request): JsonResponse
     {
         $productos = $this->consulta()
             ->when($request->query('buscar'), fn ($query, $buscar) => $query->where('nombre', 'like', "%{$buscar}%"))
             ->when($request->query('categoria_id'), fn ($query, $categoria) => $query->where('categoria_id', $categoria))
+            ->when($request->query('proveedor_id'), fn ($query, $proveedor) => $query->where('proveedor_id', $proveedor))
             ->when($request->filled('stock_bajo'), fn ($query) => $query->stockBajo($request->integer('stock_bajo')))
             ->get();
 
@@ -29,7 +31,7 @@ class ProductosController extends Controller
 
     public function store(ProductoRequest $request): JsonResponse
     {
-        $producto = Producto::create($request->validated())->load('categoria');
+        $producto = Producto::create($request->validated())->load('categoria', 'proveedor');
 
         return response()->json(['producto' => new ProductoResource($producto)], 201);
     }
@@ -37,8 +39,9 @@ class ProductosController extends Controller
     public function show(Producto $producto): JsonResponse
     {
         return response()->json([
-            'producto' => new ProductoResource($producto->load('categoria')),
+            'producto' => new ProductoResource($producto->load('categoria', 'proveedor')),
             'categorias' => Categoria::orderBy('nombre')->get(),
+            'proveedores' => Proveedor::orderBy('nombre')->get(),
         ]);
     }
 
@@ -46,7 +49,24 @@ class ProductosController extends Controller
     {
         $producto->update($request->validated());
 
-        return response()->json(['producto' => new ProductoResource($producto->load('categoria'))]);
+        return response()->json(['producto' => new ProductoResource($producto->load('categoria', 'proveedor'))]);
+    }
+
+    /**
+     * Suma unidades al stock (ingreso de mercancia). Opcionalmente registra el proveedor.
+     */
+    public function reabastecer(Request $request, Producto $producto): JsonResponse
+    {
+        $datos = $request->validate([
+            'cantidad' => ['required', 'integer', 'min:1', 'max:100000'],
+            'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
+        ]);
+
+        $producto->increment('stock', $datos['cantidad'], array_filter([
+            'proveedor_id' => $datos['proveedor_id'] ?? null,
+        ]));
+
+        return response()->json(['producto' => new ProductoResource($producto->load('categoria', 'proveedor'))]);
     }
 
     public function destroy(Producto $producto): JsonResponse
@@ -68,6 +88,6 @@ class ProductosController extends Controller
 
     private function consulta(): Builder
     {
-        return Producto::with('categoria')->orderBy('nombre');
+        return Producto::with('categoria', 'proveedor')->orderBy('nombre');
     }
 }

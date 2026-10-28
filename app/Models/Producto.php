@@ -19,6 +19,7 @@ class Producto extends Model
         'descripcion',
         'precio',
         'categoria_id',
+        'proveedor_id',
         'stock',
     ];
 
@@ -28,12 +29,18 @@ class Producto extends Model
             'precio' => 'decimal:2',
             'stock' => 'integer',
             'categoria_id' => 'integer',
+            'proveedor_id' => 'integer',
         ];
     }
 
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(Categoria::class);
+    }
+
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class);
     }
 
     public function ventas(): HasMany

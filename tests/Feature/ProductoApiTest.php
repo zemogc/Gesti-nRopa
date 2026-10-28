@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Categoria;
 use App\Models\Producto;
+use App\Models\Proveedor;
 use App\Models\Venta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -92,6 +93,51 @@ class ProductoApiTest extends TestCase
         $this->deleteJson("/api/productos/{$producto->id}")
             ->assertOk()
             ->assertJsonCount(0, 'productos');
+    }
+
+    public function test_asocia_un_proveedor_y_filtra_por_el(): void
+    {
+        $proveedor = Proveedor::factory()->create(['nombre' => 'Textiles SA']);
+        $categoria = Categoria::factory()->create();
+        Producto::factory()->create();
+
+        $this->postJson('/api/productos', [
+            'nombre' => 'Jean',
+            'descripcion' => 'x',
+            'precio' => 10,
+            'categoria_id' => $categoria->id,
+            'proveedor_id' => $proveedor->id,
+            'stock' => 1,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('producto.proveedor', 'Textiles SA');
+
+        $this->getJson("/api/productos?proveedor_id={$proveedor->id}")->assertJsonCount(1, 'productos');
+        $this->getJson("/api/proveedores/{$proveedor->id}")->assertJsonCount(1, 'productos');
+    }
+
+    public function test_al_eliminar_el_proveedor_el_producto_queda_sin_proveedor(): void
+    {
+        $producto = Producto::factory()->for(Proveedor::factory())->create();
+
+        $this->deleteJson("/api/proveedores/{$producto->proveedor_id}")->assertOk();
+
+        $this->assertNull($producto->fresh()->proveedor_id);
+    }
+
+    public function test_reabastece_el_stock(): void
+    {
+        $producto = Producto::factory()->create(['stock' => 2]);
+        $proveedor = Proveedor::factory()->create();
+
+        $this->postJson("/api/productos/{$producto->id}/reabastecer", ['cantidad' => 10, 'proveedor_id' => $proveedor->id])
+            ->assertOk()
+            ->assertJsonPath('producto.stock', 12)
+            ->assertJsonPath('producto.proveedor_id', $proveedor->id);
+
+        $this->postJson("/api/productos/{$producto->id}/reabastecer", ['cantidad' => 0])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('cantidad');
     }
 
     public function test_no_elimina_un_producto_con_ventas(): void
