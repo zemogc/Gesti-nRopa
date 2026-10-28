@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="372" viewBox="0 0 1000 372" role="img" aria-label="Historial de movimientos de stock de un producto">
+<title>Historial de movimientos de stock de un producto</title>
+<rect x="0.5" y="0.5" width="999" height="371" rx="14" fill="#1a1a19" stroke="#34332f"/>
+<path d="M0.5 14.5 a14 14 0 0 1 14 -14 h971 a14 14 0 0 1 14 14 v29 h-999 z" fill="#232321" stroke="#34332f"/><circle cx="24" cy="22" r="6" fill="#e66767"/><circle cx="42" cy="22" r="6" fill="#eda100"/><circle cx="60" cy="22" r="6" fill="#1baf7a"/><text x="500.0" y="27" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" text-anchor="middle">GET /api/productos/3/movimientos</text>
+<text x="32" y="86" fill="#f0efec" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="18" font-weight="600">Historial de stock · Jean slim fit</text>
+<text x="32" y="128" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="start">FECHA</text>
+<text x="210" y="128" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="start">TIPO</text>
+<text x="510" y="128" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="end">CANTIDAD</text>
+<text x="640" y="128" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="end">STOCK</text>
+<text x="660" y="128" fill="#8f8e86" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="start">REFERENCIA</text>
+<line x1="32" x2="968" y1="140" y2="140" stroke="#34332f"/>
+<text x="32" y="174" fill="#c3c2b7" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">2026-10-28 16:31</text>
+<rect x="210" y="157" width="56" height="24" rx="6" fill="#232321" stroke="#34332f"/>
+<text x="217" y="174" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">venta</text>
+<text x="510" y="174" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" text-anchor="end">▼ -2</text>
+<text x="640" y="174" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" font-weight="600" text-anchor="end">61</text>
+<text x="660" y="174" fill="#c3c2b7" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">Venta #41</text>
+<line x1="32" x2="968" y1="190" y2="190" stroke="#2c2b28"/>
+<text x="32" y="222" fill="#c3c2b7" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">2026-10-28 16:31</text>
+<rect x="210" y="205" width="148" height="24" rx="6" fill="#232321" stroke="#34332f"/>
+<text x="217" y="222" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">reabastecimiento</text>
+<text x="510" y="222" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" text-anchor="end">▲ +20</text>
+<text x="640" y="222" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" font-weight="600" text-anchor="end">63</text>
+<text x="660" y="222" fill="#c3c2b7" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">Rosales-Mata · Factura 1043</text>
+<line x1="32" x2="968" y1="238" y2="238" stroke="#2c2b28"/>
+<text x="32" y="270" fill="#c3c2b7" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">2026-10-28 16:31</text>
+<rect x="210" y="253" width="56" height="24" rx="6" fill="#232321" stroke="#34332f"/>
+<text x="217" y="270" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">venta</text>
+<text x="510" y="270" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" text-anchor="end">▼ -2</text>
+<text x="640" y="270" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" font-weight="600" text-anchor="end">43</text>
+<text x="660" y="270" fill="#c3c2b7" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">Venta #35</text>
+<line x1="32" x2="968" y1="286" y2="286" stroke="#2c2b28"/>
+<text x="32" y="318" fill="#c3c2b7" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">2026-10-28 16:31</text>
+<rect x="210" y="301" width="56" height="24" rx="6" fill="#232321" stroke="#34332f"/>
+<text x="217" y="318" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14">venta</text>
+<text x="510" y="318" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" text-anchor="end">▼ -1</text>
+<text x="640" y="318" fill="#f0efec" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace" font-size="14" font-weight="600" text-anchor="end">45</text>
+<text x="660" y="318" fill="#c3c2b7" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">Venta #29</text>
+<line x1="32" x2="968" y1="334" y2="334" stroke="#2c2b28"/>
+</svg>
