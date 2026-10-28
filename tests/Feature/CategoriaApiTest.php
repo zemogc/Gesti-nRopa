@@ -75,15 +75,25 @@ class CategoriaApiTest extends TestCase
             ->assertJsonPath('categoria.descripcion', 'Nueva descripcion');
     }
 
-    public function test_elimina_la_categoria_y_sus_productos(): void
+    public function test_elimina_una_categoria_sin_productos(): void
     {
-        $producto = Producto::factory()->create();
+        $categoria = Categoria::factory()->create();
 
-        $this->deleteJson("/api/categorias/{$producto->categoria_id}")
+        $this->deleteJson("/api/categorias/{$categoria->id}")
             ->assertOk()
             ->assertJson(['success' => true])
             ->assertJsonCount(0, 'categorias');
 
-        $this->assertModelMissing($producto);
+        $this->assertModelMissing($categoria);
+    }
+
+    public function test_no_elimina_una_categoria_con_productos(): void
+    {
+        $producto = Producto::factory()->create();
+
+        $this->deleteJson("/api/categorias/{$producto->categoria_id}")
+            ->assertStatus(409);
+
+        $this->assertModelExists($producto);
     }
 }

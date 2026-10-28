@@ -51,6 +51,13 @@ class ClientesController extends Controller
 
     public function destroy(Cliente $cliente): JsonResponse
     {
+        // La llave foranea borra en cascada: se impide para no perder el historial de ventas
+        if ($cliente->ventas()->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar el cliente porque tiene ventas registradas.',
+            ], 409);
+        }
+
         $cliente->delete();
 
         return response()->json([

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
+use App\Models\Venta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -68,5 +69,15 @@ class ClienteApiTest extends TestCase
             ->assertJson(['success' => true]);
 
         $this->assertModelMissing($cliente);
+    }
+
+    public function test_no_elimina_un_cliente_con_ventas(): void
+    {
+        $venta = Venta::factory()->create();
+
+        $this->deleteJson("/api/clientes/{$venta->cliente_id}")
+            ->assertStatus(409);
+
+        $this->assertModelExists($venta);
     }
 }

@@ -35,6 +35,13 @@ class CategoriaController extends Controller
 
     public function destroy(Categoria $categoria): JsonResponse
     {
+        // La llave foranea borra en cascada: se impide para no perder productos ni ventas
+        if ($categoria->productos()->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar la categoria porque tiene productos asociados.',
+            ], 409);
+        }
+
         $categoria->delete();
 
         return response()->json([

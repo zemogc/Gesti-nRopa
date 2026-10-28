@@ -51,6 +51,13 @@ class ProductosController extends Controller
 
     public function destroy(Producto $producto): JsonResponse
     {
+        // La llave foranea borra en cascada: se impide para no perder el historial de ventas
+        if ($producto->ventas()->exists()) {
+            return response()->json([
+                'message' => 'No se puede eliminar el producto porque tiene ventas registradas.',
+            ], 409);
+        }
+
         $producto->delete();
 
         return response()->json([

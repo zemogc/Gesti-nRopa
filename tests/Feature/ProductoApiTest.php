@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Categoria;
 use App\Models\Producto;
+use App\Models\Venta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -91,5 +92,15 @@ class ProductoApiTest extends TestCase
         $this->deleteJson("/api/productos/{$producto->id}")
             ->assertOk()
             ->assertJsonCount(0, 'productos');
+    }
+
+    public function test_no_elimina_un_producto_con_ventas(): void
+    {
+        $venta = Venta::factory()->create();
+
+        $this->deleteJson("/api/productos/{$venta->producto_id}")
+            ->assertStatus(409);
+
+        $this->assertModelExists($venta);
     }
 }
