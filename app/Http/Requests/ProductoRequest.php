@@ -2,17 +2,13 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class ProductoRequest extends FormRequest
+class ProductoRequest extends ApiRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
+    protected array $mayusculas = ['sku', 'talla'];
 
-    public function rules(): array
+    protected function reglas(): array
     {
         return [
             'sku' => [
@@ -28,6 +24,7 @@ class ProductoRequest extends FormRequest
             'categoria_id' => ['required', 'integer', 'exists:categorias,id'],
             'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
             'stock' => ['required', 'integer', 'min:0'],
+            'activo' => ['boolean'],
         ];
     }
 }

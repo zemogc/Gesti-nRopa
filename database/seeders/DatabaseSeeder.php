@@ -4,9 +4,11 @@ namespace Database\Seeders;
 
 use App\Models\Categoria;
 use App\Models\Cliente;
+use App\Models\MovimientoStock;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\User;
+use App\Services\InventarioService;
 use App\Services\VentaService;
 use Illuminate\Database\Seeder;
 
@@ -15,7 +17,7 @@ class DatabaseSeeder extends Seeder
     /**
      * Carga datos de ejemplo de una tienda de ropa.
      */
-    public function run(VentaService $ventas): void
+    public function run(VentaService $ventas, InventarioService $inventario): void
     {
         User::factory()->create([
             'name' => 'Test User',
@@ -38,11 +40,13 @@ class DatabaseSeeder extends Seeder
             ]);
 
             foreach ($productos as $nombre => $precio) {
-                Producto::factory()->for($categoria)->for($proveedores->random())->create([
+                $producto = Producto::factory()->for($categoria)->for($proveedores->random())->create([
                     'nombre' => $nombre,
                     'precio' => $precio,
                     'stock' => fake()->numberBetween(3, 40),
                 ]);
+
+                $inventario->registrar($producto, MovimientoStock::INICIAL, $producto->stock);
             }
         }
 

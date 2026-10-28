@@ -24,6 +24,11 @@ class Producto extends Model
         'categoria_id',
         'proveedor_id',
         'stock',
+        'activo',
+    ];
+
+    protected $attributes = [
+        'activo' => true,
     ];
 
     protected function casts(): array
@@ -31,6 +36,7 @@ class Producto extends Model
         return [
             'precio' => 'decimal:2',
             'stock' => 'integer',
+            'activo' => 'boolean',
             'categoria_id' => 'integer',
             'proveedor_id' => 'integer',
         ];
@@ -49,6 +55,11 @@ class Producto extends Model
     public function ventas(): HasMany
     {
         return $this->hasMany(Venta::class);
+    }
+
+    public function movimientos(): HasMany
+    {
+        return $this->hasMany(MovimientoStock::class);
     }
 
     /**

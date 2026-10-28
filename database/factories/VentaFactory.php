@@ -19,7 +19,8 @@ class VentaFactory extends Factory
             'cliente_id' => Cliente::factory(),
             'cantidad' => fake()->numberBetween(1, 5),
             'fecha_venta' => fake()->dateTimeBetween('-3 months')->format('Y-m-d'),
-            'total' => fn (array $venta) => round(Producto::find($venta['producto_id'])->precio * $venta['cantidad'], 2),
+            'precio_unitario' => fn (array $venta) => Producto::find($venta['producto_id'])->precio,
+            'total' => fn (array $venta) => round($venta['precio_unitario'] * $venta['cantidad'], 2),
         ];
     }
 }

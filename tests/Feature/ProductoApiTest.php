@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Categoria;
+use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Proveedor;
 use App\Models\Venta;
@@ -182,6 +183,38 @@ class ProductoApiTest extends TestCase
         $this->getJson('/api/productos?buscar=CAM-L-NEG')
             ->assertJsonCount(1, 'productos')
             ->assertJsonPath('productos.0.talla', 'L');
+    }
+
+    public function test_desactivar_un_producto_impide_venderlo(): void
+    {
+        $producto = Producto::factory()->create(['stock' => 10]);
+        $cliente = Cliente::factory()->create();
+        $venta = ['producto_id' => $producto->id, 'cliente_id' => $cliente->id, 'cantidad' => 1];
+
+        $this->postJson('/api/productos', [])->assertJsonMissingValidationErrors('activo');
+        $ventaId = $this->postJson('/api/ventas', $venta)->assertCreated()->json('venta.id');
+
+        $this->patchJson("/api/productos/{$producto->id}", ['activo' => false])
+            ->assertOk()
+            ->assertJsonPath('producto.activo', false);
+
+        $this->postJson('/api/ventas', $venta)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('producto_id');
+
+        // Las ventas ya registradas se pueden seguir corrigiendo
+        $this->patchJson("/api/ventas/{$ventaId}", ['cantidad' => 2])->assertOk();
+    }
+
+    public function test_filtra_por_activo_y_excluye_inactivos_del_stock_bajo(): void
+    {
+        Producto::factory()->create(['stock' => 1]);
+        Producto::factory()->create(['stock' => 1, 'activo' => false]);
+
+        $this->getJson('/api/productos?activo=1')->assertJsonCount(1, 'productos');
+        $this->getJson('/api/productos?activo=0')->assertJsonCount(1, 'productos');
+        $this->getJson('/api/productos')->assertJsonCount(2, 'productos');
+        $this->getJson('/api/resumen')->assertJsonCount(1, 'resumen.productos_stock_bajo');
     }
 
     public function test_no_elimina_un_producto_con_ventas(): void

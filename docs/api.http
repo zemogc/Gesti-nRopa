@@ -70,6 +70,28 @@ Authorization: Bearer {{token}}
   "proveedor_id": 1
 }
 
+### Historial de stock del producto
+GET {{base}}/productos/1/movimientos
+Authorization: Bearer {{token}}
+
+### Cambiar solo el telefono de un cliente
+PATCH {{base}}/clientes/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "telefono": "311 222 3344"
+}
+
+### Descontinuar un producto
+PATCH {{base}}/productos/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "activo": false
+}
+
 ### Registrar venta (el total lo calcula la API)
 POST {{base}}/ventas
 Content-Type: application/json

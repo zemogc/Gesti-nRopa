@@ -11,6 +11,10 @@ API REST construida con **Laravel 12** para administrar el inventario y las vent
 - El **total de la venta se calcula en el servidor** a partir del precio del producto.
 - **Protección del historial**: no se pueden eliminar clientes o productos con ventas, ni categorías con productos (`409`).
 - Productos con **talla, color y SKU**, asociados a un **proveedor**, y endpoint de **reabastecimiento** de stock.
+- **Historial de movimientos de stock (kardex)**: cada venta, anulación, reabastecimiento o ajuste queda registrado con el stock resultante.
+- Productos **activos o descontinuados**: los inactivos no se pueden vender.
+- Cada venta guarda su **precio unitario**: editarla no la recalcula con el precio actual.
+- **PATCH** para actualizar solo los campos enviados.
 - **Reporte de ventas por día o mes** y **exportación a CSV** para Excel.
 - Filtros de búsqueda y **paginación opcional** en los listados.
 - Endpoint de **resumen** con indicadores del negocio.
@@ -94,7 +98,8 @@ Todas las rutas tienen el prefijo `/api`. Cada recurso expone las operaciones RE
 | `GET` | `/{recurso}` | Listar |
 | `POST` | `/{recurso}` | Crear (`201`) |
 | `GET` | `/{recurso}/{id}` | Ver detalle |
-| `PUT` / `PATCH` | `/{recurso}/{id}` | Actualizar |
+| `PUT` | `/{recurso}/{id}` | Actualizar (todos los campos) |
+| `PATCH` | `/{recurso}/{id}` | Actualizar solo los campos enviados |
 | `DELETE` | `/{recurso}/{id}` | Eliminar (`409` si tiene registros asociados) |
 
 Recursos: `categorias`, `productos`, `clientes`, `proveedores`, `ventas`.
@@ -103,7 +108,8 @@ Además:
 
 | Método | Ruta | Acción |
 | --- | --- | --- |
-| `POST` | `/productos/{id}/reabastecer` | Suma `cantidad` al stock; opcionalmente registra `proveedor_id` |
+| `POST` | `/productos/{id}/reabastecer` | Suma `cantidad` al stock; opcionales: `proveedor_id`, `nota` |
+| `GET` | `/productos/{id}/movimientos` | Historial de stock del producto (filtro `tipo`) |
 | `GET` | `/resumen` | Indicadores: totales, ingresos, stock bajo y más vendidos |
 | `GET` | `/resumen/ventas` | Ventas, unidades e ingresos agrupados por día o mes |
 | `GET` | `/ventas/exportar` | Descarga las ventas en CSV (acepta los filtros del listado) |
@@ -118,18 +124,33 @@ En [docs/api.http](docs/api.http) hay peticiones de ejemplo listas para la exten
 | Recurso | Campos |
 | --- | --- |
 | Categorías | `nombre` (único, máx. 50), `descripcion` |
-| Productos | `nombre`, `descripcion`, `precio` (≥ 0), `categoria_id` (debe existir), `stock` (entero ≥ 0); opcionales: `sku` (único; letras, números, `-` y `_`), `talla`, `color`, `proveedor_id` |
+| Productos | `nombre`, `descripcion`, `precio` (≥ 0), `categoria_id` (debe existir), `stock` (entero ≥ 0); opcionales: `sku` (único; letras, números, `-` y `_`), `talla`, `color`, `proveedor_id`, `activo` (por defecto `true`) |
 | Clientes | `nombre`, `apellido`, `email` (único), `telefono` (dígitos, espacios, `+`, `-`, `()`) |
 | Proveedores | `nombre`, `contacto` |
 | Ventas | `producto_id`, `cliente_id`, `cantidad` (≥ 1), `fecha_venta` (opcional, no futura; por defecto hoy) |
 
 En ventas el campo `total` **no se envía**: lo calcula la API.
 
+Normalización: el `email` se guarda en minúsculas y `sku` y `talla` en mayúsculas, de modo que `Ana@Mail.com` y `ana@mail.com` cuentan como el mismo email.
+
+### Historial de stock
+
+Tipos de movimiento: `inicial`, `venta`, `edicion_venta`, `anulacion`, `reabastecimiento` y `ajuste` (cambio directo del campo `stock` con `PUT`/`PATCH`). La `cantidad` es positiva si entra mercancía y negativa si sale.
+
+```json
+{
+  "movimientos": [
+    { "tipo": "reabastecimiento", "cantidad": 20, "stock_resultante": 35, "proveedor": { "id": 1, "nombre": "Textiles SA" }, "nota": "Factura 123" },
+    { "tipo": "venta", "cantidad": -2, "stock_resultante": 15, "venta_id": 21 }
+  ]
+}
+```
+
 ### Filtros y paginación
 
 | Ruta | Parámetros |
 | --- | --- |
-| `GET /productos` | `buscar` (nombre o SKU), `categoria_id`, `proveedor_id`, `talla`, `color`, `stock_bajo` (ej. `stock_bajo=5`) |
+| `GET /productos` | `buscar` (nombre o SKU), `categoria_id`, `proveedor_id`, `talla`, `color`, `activo` (`1` o `0`), `stock_bajo` (ej. `stock_bajo=5`) |
 | `GET /clientes` | `buscar` (nombre, apellido o email) |
 | `GET /ventas` y `/ventas/exportar` | `cliente_id`, `producto_id`, `desde`, `hasta` (`YYYY-MM-DD`) |
 | `GET /resumen` | `stock_minimo` (por defecto `5`) |
@@ -158,6 +179,7 @@ curl -X POST http://localhost:8000/api/ventas \
     "producto_id": 1,
     "cliente_id": 1,
     "cantidad": 2,
+    "precio_unitario": "35000.00",
     "fecha_venta": "2026-10-28",
     "total": "70000.00",
     "producto_nombre": "Camiseta basica algodon",
@@ -187,7 +209,8 @@ app/
 │   └── Resources/         # Formato JSON de productos y ventas
 ├── Models/                # Categoria, Producto, Cliente, Proveedor, Venta
 └── Services/
-    └── VentaService.php   # Lógica de ventas y stock
+    ├── InventarioService.php  # Historial de movimientos de stock
+    └── VentaService.php       # Lógica de ventas y stock
 config/gestion.php         # Opciones propias de la API
 database/
 ├── factories/

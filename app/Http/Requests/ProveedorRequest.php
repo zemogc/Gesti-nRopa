@@ -2,16 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class ProveedorRequest extends FormRequest
+class ProveedorRequest extends ApiRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    public function rules(): array
+    protected function reglas(): array
     {
         return [
             'nombre' => ['required', 'string', 'max:100'],

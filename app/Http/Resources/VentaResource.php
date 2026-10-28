@@ -14,6 +14,7 @@ class VentaResource extends JsonResource
             'producto_id' => $this->producto_id,
             'cliente_id' => $this->cliente_id,
             'cantidad' => $this->cantidad,
+            'precio_unitario' => $this->precio_unitario,
             'fecha_venta' => $this->fecha_venta?->format('Y-m-d'),
             'total' => $this->total,
             // Campos planos, como los devolvia la API original

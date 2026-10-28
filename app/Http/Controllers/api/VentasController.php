@@ -73,7 +73,10 @@ class VentasController extends Controller
 
     public function update(VentaRequest $request, Venta $venta): JsonResponse
     {
-        $venta = $this->ventas->actualizar($venta, $request->validated());
+        // En PATCH los campos no enviados conservan su valor actual
+        $datos = $request->validated() + $venta->only(['producto_id', 'cliente_id', 'cantidad']);
+
+        $venta = $this->ventas->actualizar($venta, $datos);
 
         return response()->json(['venta' => new VentaResource($venta->load('producto', 'cliente'))]);
     }
