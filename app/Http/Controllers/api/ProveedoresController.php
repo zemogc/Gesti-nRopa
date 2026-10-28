@@ -3,80 +3,43 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProveedorRequest;
 use App\Models\Proveedor;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
+
 class ProveedoresController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        $proveedores = Proveedor::all();
-        return json_encode(['proveedores' => $proveedores]);
-
+        return response()->json(['proveedores' => Proveedor::orderBy('nombre')->get()]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ProveedorRequest $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
+        $proveedor = Proveedor::create($request->validated());
+
+        return response()->json(['proveedor' => $proveedor], 201);
+    }
+
+    public function show(Proveedor $proveedor): JsonResponse
+    {
+        return response()->json(['proveedor' => $proveedor]);
+    }
+
+    public function update(ProveedorRequest $request, Proveedor $proveedor): JsonResponse
+    {
+        $proveedor->update($request->validated());
+
+        return response()->json(['proveedor' => $proveedor]);
+    }
+
+    public function destroy(Proveedor $proveedor): JsonResponse
+    {
+        $proveedor->delete();
+
+        return response()->json([
+            'success' => true,
+            'proveedores' => Proveedor::orderBy('nombre')->get(),
         ]);
-        $proveedor = new Proveedor();
-        $proveedor->id = $request->id;
-        $proveedor->nombre = $request->nombre;
-        $proveedor->contacto = $request->contacto;
-        $proveedor->save();
-
-        return json_encode(['proveedor' => $proveedor]);
-
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $proveedor = Proveedor::find($id);
-        if (is_null($proveedor)) {
-            return abort(404);
-        }
-
-        return json_encode(['proveedor' => $proveedor]);
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $proveedor = Proveedor::find($id);
-
-        $proveedor->id = $request->id;
-        $proveedor->nombre = $request->nombre;
-        $proveedor->contacto = $request->contacto;
-        $proveedor->save();
-
-        return json_encode(['proveedor' => $proveedor]);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $proveedor = Proveedor::find($id);
-        $proveedor ->delete();
-
-        $proveedores = Proveedor::all();
-        return json_encode(['proveedores' => $proveedores, 'success' => true]);
-
     }
 }

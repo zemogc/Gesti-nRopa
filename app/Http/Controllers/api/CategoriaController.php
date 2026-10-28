@@ -3,80 +3,43 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoriaRequest;
 use App\Models\Categoria;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
 
 class CategoriaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        $categorias = Categoria::all();
-        return json_encode(['categorias' => $categorias]);
-
+        return response()->json(['categorias' => Categoria::orderBy('nombre')->get()]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(CategoriaRequest $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
-        ]);
-        $categoria = new Categoria();
-        $categoria->id = $request->id;
-        $categoria->nombre = $request->nombre;
-        $categoria->descripcion = $request->descripcion;
-        $categoria->save();
+        $categoria = Categoria::create($request->validated());
 
-        return json_encode(['categoria' => $categoria]);
-
+        return response()->json(['categoria' => $categoria], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Categoria $categoria): JsonResponse
     {
-        $categoria = Categoria::find($id);
-        if (is_null($categoria)) {
-            return abort(404);
-        }
-
-        return json_encode(['categoria' => $categoria]);
-
+        return response()->json(['categoria' => $categoria]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(CategoriaRequest $request, Categoria $categoria): JsonResponse
     {
-        $categoria = Categoria::find($id);
-        $categoria->id = $request->id;
-        $categoria->nombre = $request->nombre;
-        $categoria->descripcion = $request->descripcion;
-        $categoria->save();
+        $categoria->update($request->validated());
 
-        return json_encode(['categoria' => $categoria]);
-
+        return response()->json(['categoria' => $categoria]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Categoria $categoria): JsonResponse
     {
-        $categoria = Categoria::find($id);
         $categoria->delete();
 
-        $categorias = Categoria::all();
-        return json_encode(['categorias' => $categorias, 'success' => true]);
-
+        return response()->json([
+            'success' => true,
+            'categorias' => Categoria::orderBy('nombre')->get(),
+        ]);
     }
 }

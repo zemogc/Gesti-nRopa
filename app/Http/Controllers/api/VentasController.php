@@ -3,100 +3,77 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Venta;
-use App\Models\Producto;
+use App\Http\Requests\VentaRequest;
+use App\Http\Resources\VentaResource;
 use App\Models\Cliente;
+use App\Models\Producto;
+use App\Models\Venta;
+use App\Services\VentaService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class VentasController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function __construct(private readonly VentaService $ventas)
     {
-        $ventas = DB::table('ventas')
-            ->join('productos', 'ventas.producto_id', '=', 'productos.id')
-            ->join('clientes', 'ventas.cliente_id', '=', 'clientes.id')
-            ->select('ventas.*', 'productos.nombre as producto_nombre', 'clientes.nombre as cliente_nombre', 'clientes.apellido as cliente_apellido')
-            ->get();
-
-        return json_encode(['ventas' => $ventas]);
-
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Filtros opcionales: ?cliente_id=, ?producto_id=, ?desde=YYYY-MM-DD, ?hasta=YYYY-MM-DD
      */
-    public function store(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'id' => ['required', 'max:30']
+        $request->validate([
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
         ]);
-        $venta = new Venta();
-        $venta->id = $request->id;
-        $venta->producto_id = $request->producto_id;
-        $venta->cliente_id = $request->cliente_id;
-        $venta->cantidad = $request->cantidad;
-        $venta->fecha_venta = $request->fecha_venta;
-        $venta->total = $request->total;
-        $venta->save();
 
-        return json_encode(['venta' => $venta]);
-
-
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        $venta = Venta::find($id);
-        if (is_null($venta)) {
-            return abort(404);
-        }
-        $productos = Producto::all();
-        $clientes = Cliente::all();
-
-        return json_encode(['venta' => $venta, 'productos' => $productos, 'clientes' => $clientes]);
-
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        $venta = Venta::find($id);
-        $venta->id = $request->id;
-        $venta->producto_id = $request->producto_id;
-        $venta->cliente_id = $request->cliente_id;
-        $venta->cantidad = $request->cantidad;
-        $venta->fecha_venta = $request->fecha_venta;
-        $venta->total = $request->total;
-        $venta->save();
-
-        return json_encode(['venta' => $venta]);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $venta = Venta::find($id);
-        $venta->delete();
-
-        $ventas = DB::table('ventas')
-            ->join('productos', 'ventas.producto_id', '=', 'productos.id')
-            ->join('clientes', 'ventas.cliente_id', '=', 'clientes.id')
-            ->select('ventas.*', 'productos.nombre as producto_nombre', 'clientes.nombre as cliente_nombre', 'clientes.apellido as cliente_apellido')
+        $ventas = $this->consulta()
+            ->when($request->query('cliente_id'), fn ($query, $cliente) => $query->where('cliente_id', $cliente))
+            ->when($request->query('producto_id'), fn ($query, $producto) => $query->where('producto_id', $producto))
+            ->when($request->query('desde'), fn ($query, $desde) => $query->whereDate('fecha_venta', '>=', $desde))
+            ->when($request->query('hasta'), fn ($query, $hasta) => $query->whereDate('fecha_venta', '<=', $hasta))
             ->get();
 
-        return json_encode(['ventas' => $ventas, 'success' => true]);
+        return response()->json(['ventas' => VentaResource::collection($ventas)]);
+    }
+
+    public function store(VentaRequest $request): JsonResponse
+    {
+        $venta = $this->ventas->registrar($request->validated());
+
+        return response()->json(['venta' => new VentaResource($venta->load('producto', 'cliente'))], 201);
+    }
+
+    public function show(Venta $venta): JsonResponse
+    {
+        return response()->json([
+            'venta' => new VentaResource($venta->load('producto', 'cliente')),
+            'productos' => Producto::orderBy('nombre')->get(),
+            'clientes' => Cliente::orderBy('apellido')->orderBy('nombre')->get(),
+        ]);
+    }
+
+    public function update(VentaRequest $request, Venta $venta): JsonResponse
+    {
+        $venta = $this->ventas->actualizar($venta, $request->validated());
+
+        return response()->json(['venta' => new VentaResource($venta->load('producto', 'cliente'))]);
+    }
+
+    public function destroy(Venta $venta): JsonResponse
+    {
+        $this->ventas->anular($venta);
+
+        return response()->json([
+            'success' => true,
+            'ventas' => VentaResource::collection($this->consulta()->get()),
+        ]);
+    }
+
+    private function consulta(): Builder
+    {
+        return Venta::with('producto', 'cliente')->latest('fecha_venta')->latest('id');
     }
 }

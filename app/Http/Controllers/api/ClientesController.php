@@ -3,84 +3,59 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ClienteRequest;
 use App\Models\Cliente;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class ClientesController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Filtro opcional: ?buscar= (nombre, apellido o email)
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        $clientes = Cliente::all();
-        return json_encode(['clientes' => $clientes]);
+        $clientes = Cliente::query()
+            ->when($request->query('buscar'), function ($query, $buscar) {
+                $query->where(function ($query) use ($buscar) {
+                    $query->where('nombre', 'like', "%{$buscar}%")
+                        ->orWhere('apellido', 'like', "%{$buscar}%")
+                        ->orWhere('email', 'like', "%{$buscar}%");
+                });
+            })
+            ->orderBy('apellido')
+            ->orderBy('nombre')
+            ->get();
 
+        return response()->json(['clientes' => $clientes]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ClienteRequest $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
-        ]);
-        $cliente = new Cliente();
-        $cliente->id = $request->id;
-        $cliente->nombre = $request->nombre;
-        $cliente->apellido = $request->apellido;
-        $cliente->email = $request->email;
-        $cliente->telefono = $request->telefono;
-        $cliente->save();
+        $cliente = Cliente::create($request->validated());
 
-        return json_encode(['cliente' => $cliente]);
+        return response()->json(['cliente' => $cliente], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Cliente $cliente): JsonResponse
     {
-        $cliente = Cliente::find($id);
-        if (is_null($cliente)) {
-            return abort(404);
-        }
-
-        return json_encode(['cliente' => $cliente]);
-
+        return response()->json(['cliente' => $cliente]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(ClienteRequest $request, Cliente $cliente): JsonResponse
     {
-        $cliente = Cliente::find($id);
+        $cliente->update($request->validated());
 
-        $cliente->id = $request->id;
-        $cliente->nombre = $request->nombre;
-        $cliente->apellido = $request->apellido;
-        $cliente->email = $request->email;
-        $cliente->telefono = $request->telefono;
-        $cliente->save();
-
-        return json_encode(['cliente' => $cliente]);
-
+        return response()->json(['cliente' => $cliente]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Cliente $cliente): JsonResponse
     {
-        $cliente = Cliente::find($id);
         $cliente->delete();
 
-        $clientes = Cliente::all();
-        return json_encode(['clientes' => $clientes, 'success' => true]);
-
+        return response()->json([
+            'success' => true,
+            'clientes' => Cliente::orderBy('apellido')->orderBy('nombre')->get(),
+        ]);
     }
 }

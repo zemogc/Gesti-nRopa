@@ -3,95 +3,64 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductoRequest;
+use App\Http\Resources\ProductoResource;
+use App\Models\Categoria;
 use App\Models\Producto;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 
 class ProductosController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Filtros opcionales: ?buscar=, ?categoria_id=, ?stock_bajo=5
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        $productos = DB::table('productos')
-            ->join('categorias', 'categorias.id', '=', 'productos.categoria_id')
-            ->select('productos.*', 'categorias.nombre as categoria')
+        $productos = $this->consulta()
+            ->when($request->query('buscar'), fn ($query, $buscar) => $query->where('nombre', 'like', "%{$buscar}%"))
+            ->when($request->query('categoria_id'), fn ($query, $categoria) => $query->where('categoria_id', $categoria))
+            ->when($request->filled('stock_bajo'), fn ($query) => $query->stockBajo($request->integer('stock_bajo')))
             ->get();
-        return json_encode(['productos' => $productos]);
 
+        return response()->json(['productos' => ProductoResource::collection($productos)]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ProductoRequest $request): JsonResponse
     {
-        $validate = Validator::make($request->all(), [
-            'name' => ['required', 'max:30']
+        $producto = Producto::create($request->validated())->load('categoria');
+
+        return response()->json(['producto' => new ProductoResource($producto)], 201);
+    }
+
+    public function show(Producto $producto): JsonResponse
+    {
+        return response()->json([
+            'producto' => new ProductoResource($producto->load('categoria')),
+            'categorias' => Categoria::orderBy('nombre')->get(),
         ]);
-        $producto = new Producto();
-        $producto->id = $request->id;
-        $producto->nombre = $request->nombre;
-        $producto->descripcion = $request->descripcion;
-        $producto->precio = $request->precio;
-        $producto->categoria_id = $request->categoria_id;
-        $producto->stock = $request->stock;
-        $producto->save();
-
-        return json_encode(['producto' => $producto]);
-
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(ProductoRequest $request, Producto $producto): JsonResponse
     {
-        $producto = Producto::find($id);
-        if (is_null($producto)) {
-            return abort(404);
-        }
+        $producto->update($request->validated());
 
-        $categorias = DB::table('categorias')->orderBy('nombre')->get();
-        return json_encode(['producto' => $producto, 'categorias' => $categorias]);
-
+        return response()->json(['producto' => new ProductoResource($producto->load('categoria'))]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Producto $producto): JsonResponse
     {
-        $producto = Producto::find($id);
-        $producto->id = $request->id;
-        $producto->nombre = $request->nombre;
-        $producto->descripcion = $request->descripcion;
-        $producto->precio = $request->precio;
-        $producto->categoria_id = $request->categoria_id;
-        $producto->stock = $request->stock;
-        $producto->save();
-
-        return json_encode(['producto' => $producto]);
-
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $producto = Producto::find($id);
         $producto->delete();
 
-        $productos = DB::table('productos')
-            ->join('categorias', 'categorias.id', '=', 'productos.categoria_id')
-            ->select('productos.*', 'categorias.nombre as categoria')
-            ->get();
+        return response()->json([
+            'success' => true,
+            'productos' => ProductoResource::collection($this->consulta()->get()),
+        ]);
+    }
 
-        return json_encode(['productos' => $productos, 'success' => true]);
-
+    private function consulta(): Builder
+    {
+        return Producto::with('categoria')->orderBy('nombre');
     }
 }
