@@ -17,6 +17,18 @@ Content-Type: application/json
 GET {{base}}/resumen?stock_minimo=5
 Authorization: Bearer {{token}}
 
+### Ventas agrupadas por mes
+GET {{base}}/resumen/ventas?agrupar=mes
+Authorization: Bearer {{token}}
+
+### Exportar ventas a CSV
+GET {{base}}/ventas/exportar?desde=2026-01-01
+Authorization: Bearer {{token}}
+
+### Productos talla M en negro
+GET {{base}}/productos?talla=M&color=Negro
+Authorization: Bearer {{token}}
+
 ### Productos paginados con stock bajo
 GET {{base}}/productos?stock_bajo=10&por_pagina=5&pagina=1
 Authorization: Bearer {{token}}
@@ -37,8 +49,11 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
+  "sku": "VEST-FLOR-M",
   "nombre": "Vestido floral",
-  "descripcion": "Talla unica",
+  "descripcion": "Vestido de verano",
+  "talla": "M",
+  "color": "Rojo",
   "precio": 89000,
   "categoria_id": 1,
   "proveedor_id": 1,

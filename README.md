@@ -10,7 +10,8 @@ API REST construida con **Laravel 12** para administrar el inventario y las vent
 - **Control de stock en ventas**: al registrar una venta se descuenta el stock del producto; al editarla o anularla se devuelve. Todo ocurre dentro de una transacción y se rechaza la venta si no hay unidades suficientes.
 - El **total de la venta se calcula en el servidor** a partir del precio del producto.
 - **Protección del historial**: no se pueden eliminar clientes o productos con ventas, ni categorías con productos (`409`).
-- Productos asociados a un **proveedor** y endpoint de **reabastecimiento** de stock.
+- Productos con **talla, color y SKU**, asociados a un **proveedor**, y endpoint de **reabastecimiento** de stock.
+- **Reporte de ventas por día o mes** y **exportación a CSV** para Excel.
 - Filtros de búsqueda y **paginación opcional** en los listados.
 - Endpoint de **resumen** con indicadores del negocio.
 - **Autenticación opcional** con tokens (Laravel Sanctum) y límite de peticiones por minuto.
@@ -104,6 +105,8 @@ Además:
 | --- | --- | --- |
 | `POST` | `/productos/{id}/reabastecer` | Suma `cantidad` al stock; opcionalmente registra `proveedor_id` |
 | `GET` | `/resumen` | Indicadores: totales, ingresos, stock bajo y más vendidos |
+| `GET` | `/resumen/ventas` | Ventas, unidades e ingresos agrupados por día o mes |
+| `GET` | `/ventas/exportar` | Descarga las ventas en CSV (acepta los filtros del listado) |
 | `POST` | `/auth/login` | Obtener token |
 | `POST` | `/auth/logout` | Revocar token |
 | `GET` | `/user` | Usuario autenticado |
@@ -115,7 +118,7 @@ En [docs/api.http](docs/api.http) hay peticiones de ejemplo listas para la exten
 | Recurso | Campos |
 | --- | --- |
 | Categorías | `nombre` (único, máx. 50), `descripcion` |
-| Productos | `nombre`, `descripcion`, `precio` (≥ 0), `categoria_id` (debe existir), `proveedor_id` (opcional), `stock` (entero ≥ 0) |
+| Productos | `nombre`, `descripcion`, `precio` (≥ 0), `categoria_id` (debe existir), `stock` (entero ≥ 0); opcionales: `sku` (único; letras, números, `-` y `_`), `talla`, `color`, `proveedor_id` |
 | Clientes | `nombre`, `apellido`, `email` (único), `telefono` (dígitos, espacios, `+`, `-`, `()`) |
 | Proveedores | `nombre`, `contacto` |
 | Ventas | `producto_id`, `cliente_id`, `cantidad` (≥ 1), `fecha_venta` (opcional, no futura; por defecto hoy) |
@@ -126,10 +129,11 @@ En ventas el campo `total` **no se envía**: lo calcula la API.
 
 | Ruta | Parámetros |
 | --- | --- |
-| `GET /productos` | `buscar`, `categoria_id`, `proveedor_id`, `stock_bajo` (ej. `stock_bajo=5`) |
+| `GET /productos` | `buscar` (nombre o SKU), `categoria_id`, `proveedor_id`, `talla`, `color`, `stock_bajo` (ej. `stock_bajo=5`) |
 | `GET /clientes` | `buscar` (nombre, apellido o email) |
-| `GET /ventas` | `cliente_id`, `producto_id`, `desde`, `hasta` (`YYYY-MM-DD`) |
+| `GET /ventas` y `/ventas/exportar` | `cliente_id`, `producto_id`, `desde`, `hasta` (`YYYY-MM-DD`) |
 | `GET /resumen` | `stock_minimo` (por defecto `5`) |
+| `GET /resumen/ventas` | `agrupar` (`dia` o `mes`), `desde`, `hasta`; por defecto últimos 30 días o 12 meses |
 
 Todos los listados aceptan `por_pagina` (máx. 100) y `pagina`. Sin `por_pagina` se devuelve la lista completa. Con paginación se agrega:
 
