@@ -1,6 +1,6 @@
 # Gestión de Ropa — API REST
 
-API REST construida con **Laravel 11** para administrar el inventario y las ventas de una tienda de ropa: categorías, productos, clientes, proveedores y ventas.
+API REST construida con **Laravel 12** para administrar el inventario y las ventas de una tienda de ropa: categorías, productos, clientes, proveedores y ventas.
 
 ## Características
 
