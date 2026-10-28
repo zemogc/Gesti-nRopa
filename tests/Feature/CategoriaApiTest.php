@@ -38,6 +38,14 @@ class CategoriaApiTest extends TestCase
             ->assertJsonValidationErrors(['nombre', 'descripcion']);
     }
 
+    public function test_los_mensajes_de_validacion_estan_en_espanol(): void
+    {
+        $this->postJson('/api/categorias', [])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'El campo nombre es obligatorio. (y 1 error mas)')
+            ->assertJsonPath('errors.descripcion.0', 'El campo descripcion es obligatorio.');
+    }
+
     public function test_ignora_el_id_enviado_en_el_cuerpo(): void
     {
         $existente = Categoria::factory()->create();
