@@ -39,6 +39,8 @@ Route::middleware(AutenticacionOpcional::class)->group(function () {
         ->parameters(['productos' => 'producto']);
     Route::post('/productos/{producto}/reabastecer', [ProductosController::class, 'reabastecer'])
         ->name('productos.reabastecer');
+    Route::get('/productos/{producto}/movimientos', [ProductosController::class, 'movimientos'])
+        ->name('productos.movimientos');
 
     Route::apiResource('proveedores', ProveedoresController::class)
         ->parameters(['proveedores' => 'proveedor']);

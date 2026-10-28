@@ -51,6 +51,11 @@ class Producto extends Model
         return $this->hasMany(Venta::class);
     }
 
+    public function movimientos(): HasMany
+    {
+        return $this->hasMany(MovimientoStock::class);
+    }
+
     /**
      * Productos con stock igual o menor al limite indicado.
      */

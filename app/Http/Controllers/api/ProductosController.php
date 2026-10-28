@@ -6,14 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductoRequest;
 use App\Http\Resources\ProductoResource;
 use App\Models\Categoria;
+use App\Models\MovimientoStock;
 use App\Models\Producto;
 use App\Models\Proveedor;
+use App\Services\InventarioService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProductosController extends Controller
 {
+    public function __construct(private readonly InventarioService $inventario) {}
+
     /**
      * Filtros opcionales: ?buscar= (nombre o SKU), ?categoria_id=, ?proveedor_id=, ?talla=, ?color=, ?stock_bajo=5
      */
@@ -34,9 +40,14 @@ class ProductosController extends Controller
 
     public function store(ProductoRequest $request): JsonResponse
     {
-        $producto = Producto::create($request->validated())->load('categoria', 'proveedor');
+        $producto = DB::transaction(function () use ($request) {
+            $producto = Producto::create($request->validated());
+            $this->inventario->registrar($producto, MovimientoStock::INICIAL, $producto->stock);
 
-        return response()->json(['producto' => new ProductoResource($producto)], 201);
+            return $producto;
+        });
+
+        return response()->json(['producto' => new ProductoResource($producto->load('categoria', 'proveedor'))], 201);
     }
 
     public function show(Producto $producto): JsonResponse
@@ -50,26 +61,52 @@ class ProductosController extends Controller
 
     public function update(ProductoRequest $request, Producto $producto): JsonResponse
     {
-        $producto->update($request->validated());
+        DB::transaction(function () use ($request, $producto) {
+            $stockAnterior = $producto->stock;
+            $producto->update($request->validated());
+
+            // Un cambio directo del stock queda registrado como ajuste manual
+            $this->inventario->registrar($producto, MovimientoStock::AJUSTE, $producto->stock - $stockAnterior);
+        });
 
         return response()->json(['producto' => new ProductoResource($producto->load('categoria', 'proveedor'))]);
     }
 
     /**
-     * Suma unidades al stock (ingreso de mercancia). Opcionalmente registra el proveedor.
+     * Suma unidades al stock (ingreso de mercancia). Opcionalmente registra el proveedor y una nota.
      */
     public function reabastecer(Request $request, Producto $producto): JsonResponse
     {
         $datos = $request->validate([
             'cantidad' => ['required', 'integer', 'min:1', 'max:100000'],
             'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
+            'nota' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $producto->increment('stock', $datos['cantidad'], array_filter([
-            'proveedor_id' => $datos['proveedor_id'] ?? null,
-        ]));
+        DB::transaction(fn () => $this->inventario->reabastecer(
+            $producto,
+            $datos['cantidad'],
+            $datos['proveedor_id'] ?? null,
+            $datos['nota'] ?? null,
+        ));
 
         return response()->json(['producto' => new ProductoResource($producto->load('categoria', 'proveedor'))]);
+    }
+
+    /**
+     * Historial de cambios de stock del producto, del mas reciente al mas antiguo. Filtro opcional: ?tipo=
+     */
+    public function movimientos(Request $request, Producto $producto): JsonResponse
+    {
+        $request->validate(['tipo' => ['nullable', Rule::in(MovimientoStock::TIPOS)]]);
+
+        $movimientos = $producto->movimientos()
+            ->with('proveedor:id,nombre', 'usuario:id,name')
+            ->when($request->query('tipo'), fn ($query, $tipo) => $query->where('tipo', $tipo))
+            ->latest()
+            ->latest('id');
+
+        return $this->listar($request, $movimientos, 'movimientos');
     }
 
     public function destroy(Producto $producto): JsonResponse
