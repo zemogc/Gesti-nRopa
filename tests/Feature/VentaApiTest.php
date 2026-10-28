@@ -35,6 +35,15 @@ class VentaApiTest extends TestCase
         $this->assertSame(7, $producto->fresh()->stock);
     }
 
+    public function test_admite_montos_en_millones(): void
+    {
+        $producto = Producto::factory()->create(['precio' => 1250000, 'stock' => 10]);
+
+        $this->registrarVenta($producto, 5)
+            ->assertCreated()
+            ->assertJsonPath('venta.total', '6250000.00');
+    }
+
     public function test_rechaza_venta_sin_stock_suficiente(): void
     {
         $producto = Producto::factory()->create(['stock' => 2]);
