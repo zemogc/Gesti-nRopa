@@ -12,6 +12,7 @@ use App\Services\VentaService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VentasController extends Controller
 {
@@ -22,18 +23,36 @@ class VentasController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $request->validate([
-            'desde' => ['nullable', 'date'],
-            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
-        ]);
+        return $this->listar($request, $this->filtrar($request), 'ventas', VentaResource::class);
+    }
 
-        $ventas = $this->consulta()
-            ->when($request->query('cliente_id'), fn ($query, $cliente) => $query->where('cliente_id', $cliente))
-            ->when($request->query('producto_id'), fn ($query, $producto) => $query->where('producto_id', $producto))
-            ->when($request->query('desde'), fn ($query, $desde) => $query->whereDate('fecha_venta', '>=', $desde))
-            ->when($request->query('hasta'), fn ($query, $hasta) => $query->whereDate('fecha_venta', '<=', $hasta));
+    /**
+     * Descarga las ventas filtradas en CSV (separado por ";" y con BOM para que Excel lo abra bien).
+     */
+    public function exportar(Request $request): StreamedResponse
+    {
+        $ventas = $this->filtrar($request);
 
-        return $this->listar($request, $ventas, 'ventas', VentaResource::class);
+        return response()->streamDownload(function () use ($ventas) {
+            $salida = fopen('php://output', 'w');
+            fwrite($salida, "\xEF\xBB\xBF");
+            fputcsv($salida, ['id', 'fecha', 'cliente', 'email', 'producto', 'sku', 'cantidad', 'total'], ';');
+
+            foreach ($ventas->lazy() as $venta) {
+                fputcsv($salida, [
+                    $venta->id,
+                    $venta->fecha_venta?->format('Y-m-d'),
+                    trim("{$venta->cliente?->nombre} {$venta->cliente?->apellido}"),
+                    $venta->cliente?->email,
+                    $venta->producto?->nombre,
+                    $venta->producto?->sku,
+                    $venta->cantidad,
+                    $venta->total,
+                ], ';');
+            }
+
+            fclose($salida);
+        }, 'ventas-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function store(VentaRequest $request): JsonResponse
@@ -67,6 +86,20 @@ class VentasController extends Controller
             'success' => true,
             'ventas' => VentaResource::collection($this->consulta()->get()),
         ]);
+    }
+
+    private function filtrar(Request $request): Builder
+    {
+        $request->validate([
+            'desde' => ['nullable', 'date'],
+            'hasta' => ['nullable', 'date', 'after_or_equal:desde'],
+        ]);
+
+        return $this->consulta()
+            ->when($request->query('cliente_id'), fn ($query, $cliente) => $query->where('cliente_id', $cliente))
+            ->when($request->query('producto_id'), fn ($query, $producto) => $query->where('producto_id', $producto))
+            ->when($request->query('desde'), fn ($query, $desde) => $query->whereDate('fecha_venta', '>=', $desde))
+            ->when($request->query('hasta'), fn ($query, $hasta) => $query->whereDate('fecha_venta', '<=', $hasta));
     }
 
     private function consulta(): Builder

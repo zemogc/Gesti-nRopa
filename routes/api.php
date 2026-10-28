@@ -5,6 +5,7 @@ use App\Http\Controllers\api\CategoriaController;
 use App\Http\Controllers\api\ClientesController;
 use App\Http\Controllers\api\ProductosController;
 use App\Http\Controllers\api\ProveedoresController;
+use App\Http\Controllers\api\ReporteVentasController;
 use App\Http\Controllers\api\ResumenController;
 use App\Http\Controllers\api\VentasController;
 use App\Http\Middleware\AutenticacionOpcional;
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Exigen token solo si API_REQUIERE_AUTH=true (ver config/gestion.php)
 Route::middleware(AutenticacionOpcional::class)->group(function () {
     Route::get('/resumen', ResumenController::class)->name('resumen');
+    Route::get('/resumen/ventas', ReporteVentasController::class)->name('resumen.ventas');
 
     Route::apiResource('categorias', CategoriaController::class)
         ->parameters(['categorias' => 'categoria']);
@@ -41,6 +43,8 @@ Route::middleware(AutenticacionOpcional::class)->group(function () {
     Route::apiResource('proveedores', ProveedoresController::class)
         ->parameters(['proveedores' => 'proveedor']);
 
+    // Antes del apiResource para que "exportar" no se interprete como el id de una venta
+    Route::get('/ventas/exportar', [VentasController::class, 'exportar'])->name('ventas.exportar');
     Route::apiResource('ventas', VentasController::class)
         ->parameters(['ventas' => 'venta']);
 });
