@@ -1,0 +1,79 @@
+### Peticiones de ejemplo para la extension "REST Client" de VS Code
+### (tambien funcionan en el cliente HTTP de JetBrains)
+
+@base = http://localhost:8000/api
+@token = pega-aqui-el-token-del-login
+
+### Login (solo necesario si API_REQUIERE_AUTH=true)
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password"
+}
+
+### Resumen del negocio
+GET {{base}}/resumen?stock_minimo=5
+Authorization: Bearer {{token}}
+
+### Productos paginados con stock bajo
+GET {{base}}/productos?stock_bajo=10&por_pagina=5&pagina=1
+Authorization: Bearer {{token}}
+
+### Crear categoria
+POST {{base}}/categorias
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Vestidos",
+  "descripcion": "Vestidos casuales y de fiesta"
+}
+
+### Crear producto
+POST {{base}}/productos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Vestido floral",
+  "descripcion": "Talla unica",
+  "precio": 89000,
+  "categoria_id": 1,
+  "proveedor_id": 1,
+  "stock": 10
+}
+
+### Reabastecer producto
+POST {{base}}/productos/1/reabastecer
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "cantidad": 20,
+  "proveedor_id": 1
+}
+
+### Registrar venta (el total lo calcula la API)
+POST {{base}}/ventas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "producto_id": 1,
+  "cliente_id": 1,
+  "cantidad": 2
+}
+
+### Ventas de un cliente en un rango de fechas
+GET {{base}}/ventas?cliente_id=1&desde=2026-01-01&hasta=2026-12-31
+Authorization: Bearer {{token}}
+
+### Anular venta (devuelve el stock)
+DELETE {{base}}/ventas/1
+Authorization: Bearer {{token}}
+
+### Cerrar sesion
+POST {{base}}/auth/logout
+Authorization: Bearer {{token}}
