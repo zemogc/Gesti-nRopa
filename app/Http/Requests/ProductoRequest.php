@@ -6,6 +6,8 @@ use Illuminate\Validation\Rule;
 
 class ProductoRequest extends ApiRequest
 {
+    protected array $mayusculas = ['sku', 'talla'];
+
     protected function reglas(): array
     {
         return [

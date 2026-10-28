@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\JsonLegible;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Limitador 'api' definido en AppServiceProvider
         $middleware->throttleApi();
+        $middleware->api(append: [JsonLegible::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // La API siempre responde JSON, aunque el cliente no envie "Accept: application/json"

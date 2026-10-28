@@ -6,6 +6,8 @@ use Illuminate\Validation\Rule;
 
 class ClienteRequest extends ApiRequest
 {
+    protected array $minusculas = ['email'];
+
     protected function reglas(): array
     {
         return [
