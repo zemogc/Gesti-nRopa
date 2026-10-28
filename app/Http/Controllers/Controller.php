@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
 abstract class Controller
 {
@@ -12,7 +13,7 @@ abstract class Controller
      * Responde un listado bajo la clave indicada. Si la peticion trae ?por_pagina=N
      * se pagina (con ?pagina=M) y se agrega la clave "paginacion"; si no, se devuelve todo.
      *
-     * @param  class-string<\Illuminate\Http\Resources\Json\JsonResource>|null  $resource
+     * @param  class-string<JsonResource>|null  $resource
      */
     protected function listar(Request $request, Builder $consulta, string $clave, ?string $resource = null): JsonResponse
     {

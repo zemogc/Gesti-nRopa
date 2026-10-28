@@ -15,9 +15,7 @@ use Illuminate\Http\Request;
 
 class VentasController extends Controller
 {
-    public function __construct(private readonly VentaService $ventas)
-    {
-    }
+    public function __construct(private readonly VentaService $ventas) {}
 
     /**
      * Filtros opcionales: ?cliente_id=, ?producto_id=, ?desde=YYYY-MM-DD, ?hasta=YYYY-MM-DD

@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Models\Cliente;
 use App\Models\Producto;
+use App\Models\Venta;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Venta>
+ * @extends Factory<Venta>
  */
 class VentaFactory extends Factory
 {
