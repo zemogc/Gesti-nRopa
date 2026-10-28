@@ -21,11 +21,14 @@ class ProductosController extends Controller
     public function __construct(private readonly InventarioService $inventario) {}
 
     /**
-     * Filtros opcionales: ?buscar= (nombre o SKU), ?categoria_id=, ?proveedor_id=, ?talla=, ?color=, ?stock_bajo=5
+     * Filtros opcionales: ?buscar= (nombre o SKU), ?categoria_id=, ?proveedor_id=, ?talla=, ?color=, ?stock_bajo=5, ?activo=1|0
      */
     public function index(Request $request): JsonResponse
     {
+        $request->validate(['activo' => ['nullable', 'boolean']]);
+
         $productos = $this->consulta()
+            ->when($request->filled('activo'), fn ($query) => $query->where('activo', $request->boolean('activo')))
             ->when($request->query('buscar'), fn ($query, $buscar) => $query->where(
                 fn ($query) => $query->where('nombre', 'like', "%{$buscar}%")->orWhere('sku', $buscar)
             ))
@@ -114,7 +117,7 @@ class ProductosController extends Controller
         // La llave foranea borra en cascada: se impide para no perder el historial de ventas
         if ($producto->ventas()->exists()) {
             return response()->json([
-                'message' => 'No se puede eliminar el producto porque tiene ventas registradas.',
+                'message' => 'No se puede eliminar el producto porque tiene ventas registradas. Puedes desactivarlo con "activo": false.',
             ], 409);
         }
 

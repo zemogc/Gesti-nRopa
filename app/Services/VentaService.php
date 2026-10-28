@@ -19,6 +19,7 @@ class VentaService
     {
         return DB::transaction(function () use ($datos) {
             $producto = $this->bloquearProducto($datos['producto_id']);
+            $this->verificarActivo($producto);
             $this->descontarStock($producto, (int) $datos['cantidad']);
 
             $venta = Venta::create($this->completarDatos($datos, $producto));
@@ -40,6 +41,12 @@ class VentaService
 
             $mismoProducto = $anterior->id === (int) $datos['producto_id'];
             $producto = $mismoProducto ? $anterior : $this->bloquearProducto($datos['producto_id']);
+
+            // Una venta existente de un producto ya desactivado se puede corregir,
+            // pero no se puede pasar a un producto inactivo
+            if (! $mismoProducto) {
+                $this->verificarActivo($producto);
+            }
 
             $this->descontarStock($producto, (int) $datos['cantidad']);
 
@@ -77,6 +84,15 @@ class VentaService
     private function bloquearProducto(int|string $id): Producto
     {
         return Producto::lockForUpdate()->findOrFail($id);
+    }
+
+    private function verificarActivo(Producto $producto): void
+    {
+        if (! $producto->activo) {
+            throw ValidationException::withMessages([
+                'producto_id' => "El producto {$producto->nombre} esta desactivado y no se puede vender.",
+            ]);
+        }
     }
 
     private function descontarStock(Producto $producto, int $cantidad): void

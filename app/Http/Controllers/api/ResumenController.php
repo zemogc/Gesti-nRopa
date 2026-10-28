@@ -39,7 +39,8 @@ class ResumenController extends Controller
                 'total_ventas' => Venta::count(),
                 'ingresos_totales' => round((float) Venta::sum('total'), 2),
                 'unidades_en_stock' => (int) Producto::sum('stock'),
-                'productos_stock_bajo' => Producto::stockBajo($stockMinimo)->orderBy('stock')->get(['id', 'nombre', 'stock']),
+                // Los productos desactivados no se reponen, asi que no generan alerta
+                'productos_stock_bajo' => Producto::where('activo', true)->stockBajo($stockMinimo)->orderBy('stock')->get(['id', 'nombre', 'stock']),
                 'mas_vendidos' => $masVendidos,
             ],
         ]);

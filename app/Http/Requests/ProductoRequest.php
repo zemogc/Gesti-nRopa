@@ -22,6 +22,7 @@ class ProductoRequest extends ApiRequest
             'categoria_id' => ['required', 'integer', 'exists:categorias,id'],
             'proveedor_id' => ['nullable', 'integer', 'exists:proveedores,id'],
             'stock' => ['required', 'integer', 'min:0'],
+            'activo' => ['boolean'],
         ];
     }
 }

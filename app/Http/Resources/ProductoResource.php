@@ -18,6 +18,7 @@ class ProductoResource extends JsonResource
             'color' => $this->color,
             'precio' => $this->precio,
             'stock' => $this->stock,
+            'activo' => $this->activo,
             'categoria_id' => $this->categoria_id,
             // Nombre plano de la categoria, como lo devolvia la API original
             'categoria' => $this->whenLoaded('categoria', fn () => $this->categoria?->nombre),
