@@ -60,6 +60,14 @@ class ReporteVentasApiTest extends TestCase
         $this->getJson('/api/resumen/ventas?desde=2020-01-01&hasta=2026-01-01')->assertJsonValidationErrors('desde');
     }
 
+    public function test_rechaza_desde_posterior_a_hoy_cuando_no_se_envia_hasta(): void
+    {
+        $manana = today()->addDay()->toDateString();
+
+        $this->getJson("/api/resumen/ventas?desde={$manana}")->assertJsonValidationErrors('desde');
+        $this->getJson("/api/resumen/ventas?agrupar=mes&desde={$manana}")->assertJsonValidationErrors('desde');
+    }
+
     public function test_exporta_las_ventas_filtradas_en_csv(): void
     {
         $cliente = Cliente::factory()->create(['nombre' => 'Ana', 'apellido' => 'Gómez']);

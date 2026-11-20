@@ -31,6 +31,13 @@ class ReporteVentasController extends Controller
             ? Carbon::parse($request->query('desde'))
             : ($porMes ? $hasta->copy()->subMonths(11)->startOfMonth() : $hasta->copy()->subDays(29));
 
+        // Sin ?hasta, la regla after_or_equal no se evalua: se valida contra hoy
+        if ($desde->gt($hasta)) {
+            throw ValidationException::withMessages([
+                'desde' => 'La fecha desde no puede ser posterior a la fecha hasta ('.$hasta->toDateString().').',
+            ]);
+        }
+
         if ($porMes) {
             $desde->startOfMonth();
         }
