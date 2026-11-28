@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/zemogc/Gesti-nRopa/actions/workflows/ci.yml"><img src="https://github.com/zemogc/Gesti-nRopa/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white" alt="Laravel 12">
   <img src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.4">
